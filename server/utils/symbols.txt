@@ -1,0 +1,118 @@
+ var inp = ["NSE:SBIN-EQ", "NSE:TCS-EQ"]
+
+//  index
+var index = ["NSE:NIFTY50-INDEX", "NSE:NIFTYBANK-INDEX","NSE:FINNIFTY-INDEX","NSE:NIFTYMIDCAP50-INDEX","BSE:SENSEX-INDEX","BSE:BANKEX-INDEX"]
+
+// Compannies
+
+var companies = [
+
+// first auth_code
+// sencond acccess_token
+
+options={
+*index
+expiry date
+
+
+nifty thursday
+banknifty wednesday
+
+NIFTY expire on every Thursday of a week
+BANKnifty Wednesday 
+finnity tuesdaty
+midcap50 Monday 
+sensex and bankex Friday  expires Friday
+{Ex}:{Ex_UnderlyingSymbol}{YY}{M}{dd}{Strike}{Opt_Type} 	NSE:NIFTY20O0811000CE,
+                                                          BSE:SENSEX2381161000CE,
+                                                          NSE:NIFTY20D1025000CE
+
+
+
+    NSE:NIFTY24FEB24000CE
+    NSE:BANKNIFTY2413131000CE
+    NSE:FINNIFTY2421321350CE
+    NSE:MIDCPNIFTY24JAN10025CE
+    BSE:SENSEX2420268800CE
+    BSE:BANKEX24JAN57500CE
+
+*company
+NSE:RELIANCE24FEB3680CE
+NSE:BAJFINANCE24FEB10550CE
+NSE:HDFCBANK24FEB760CE
+NSE:SBIN24MAR310CE
+NSE:AXISBANK24MAR650CE
+NSE:ICICIBANK24FEB540CE
+NSE:INFY24FEB2360CE
+NSE:TCS24FEB2040CE
+}
+NSE:NIFTY24FEBFUT
+future symbols{
+  **index
+  NSE:NIFTY24JANFUT
+  NSE:BANKNIFTY24JANFUT
+  NSE:FINNIFTY24JANFUT
+  NSE:MIDCPNIFTY24FEBFUT
+  BSE:SENSEX24202FUT
+  BSE:BANKEX24JANFUT
+
+  *companies
+  NSE:RELIANCE24APRFUT,
+  NSE:BAJFINANCE24APRFUT,
+  NSE:HDFCBANK24APRFUT
+  NSE:SBIN24APRFUT
+NSE:AXISBANK24APRFUT
+  NSE:ICICIBANK24APRFUT
+  NSE:INFY24APRFUT
+  NSE:TCS24APRFUT
+}
+
+
+
+
+websocket_data = {
+    symbol: 'NSE:HDFCBANK-EQ',
+    ltp: 1478.85,
+    lower_ckt: 0,
+    upper_ckt: 0,
+    vol_traded_today: 12920293,
+    last_traded_time: 1705746506,
+    exch_feed_time: 1705748241,
+    bid_size: 12571,
+    ask_size: 0,
+    bid_price: 1478.85,
+    ask_price: 0,
+    last_traded_qty: 50,
+    tot_buy_qty: 12571,
+    tot_sell_qty: 0,
+    avg_trade_price: 1483.91,
+    low_price: 1476,
+    high_price: 1495.7,
+    open_price: 1483.2,
+    prev_close_price: 1470.65,
+    ch: 8.2,
+    chp: 0.56,
+    type: 'sf'
+  }
+
+ticker_data = {
+    ask: 0,
+    bid: 1478.85,
+    chp: 0.56,
+    ch: 8.2,
+    cmd: [Object],
+    description: 'NSE:HDFCBANK-EQ',
+    exchange: 'NSE',
+    fyToken: '10100000001333',
+    high_price: 1495.7,
+    low_price: 1476,
+    lp: 1478.85,
+    open_price: 1483.2,
+    original_name: 'NSE:HDFCBANK-EQ',
+    prev_close_price: 1478.85,
+    short_name: 'HDFCBANK-EQ',
+    spread: 0,
+    symbol: 'NSE:HDFCBANK-EQ',
+    tt: '1705881600',
+    volume: 12920293
+  }"NSE:RELIANCE-EQ","NSE:BAJFINANCE-EQ","NSE:HDFCBANK-EQ","NSE:SBIN-EQ","NSE:AXISBANK-EQ","NSE:ICICIBANK-EQ","NSE:INFY-EQ","NSE:TCS-EQ"]
