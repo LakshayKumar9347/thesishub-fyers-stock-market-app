@@ -10,17 +10,17 @@ fyers.setRedirectUrl('https://www.rgstartup.com/');
 fyers.setAccessToken(process.env.ACCESS_TOKEN);
 
 router.get("/index/:symbol", async (req, res) => {
-    // const date = new Date();
-    // const marketStatusResponse = await fetch(`${process.env.MAIN_URL}/api/v3/status`);
-    // const marketStatusData = await marketStatusResponse.json();
-    // const marketStatus = marketStatusData.marketStatus[0].status;
+    const date = new Date();
+    const marketStatusResponse = await fetch(`${process.env.MAIN_URL}/api/v3/status`);
+    const marketStatusData = await marketStatusResponse.json();
+    const marketStatus = marketStatusData.marketStatus[0].status;
 
-    // // POSTCLOSE_CLOSED or CLOSED
-    // if (marketStatus === 'CLOSED' || marketStatus === 'POSTCLOSE_CLOSED') {
-    //     date.setDate(date.getDate() - 1); // Adjust the date accordingly
-    // }
+    // POSTCLOSE_CLOSED or CLOSED
+    if (marketStatus === 'CLOSED' || marketStatus === 'POSTCLOSE_CLOSED') {
+        date.setDate(date.getDate() - 1); // Adjust the date accordingly
+    }
 
-    const currentDate = new Date("2024-02-09");
+    const currentDate = date;
     const year = currentDate.getFullYear();
     const month = (currentDate.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-indexed
     const day = currentDate.getDate().toString().padStart(2, '0');
@@ -49,7 +49,6 @@ router.get("/index/:symbol", async (req, res) => {
         'tcs': 'NSE:TCS-EQ',
     };
     const index = [indexMapping[symbol]];
-
     var inp = {
         "symbol": `${index}`,
         "resolution": "1",
@@ -59,10 +58,11 @@ router.get("/index/:symbol", async (req, res) => {
         "cont_flag": "1"
     }
     fyers.getHistory(inp).then((response) => {
+        // console.log(response);
         res.send(response);
     }).catch((err) => {
-        console.log("Error Occurred In Data Records:"); // Log the actual error message
-        res.status(500).send("Error Occurred In Data Records"); // Send a 500 status response to indicate server error
+        console.log("Error Occurred In Data Records:"); 
+        res.status(500).send("Error Occurred In Data Records"); 
     });
 
 })

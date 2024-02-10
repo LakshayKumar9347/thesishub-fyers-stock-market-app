@@ -164,26 +164,26 @@ const Page = () => {
                 const responsePE = await fetch(`http://localhost:5000/records/pe/${index || symbol}/${eventValue}`);
                 const parsedDataCE = await responseCE.json();
                 const parsedDataPE = await responsePE.json();
-                
+
                 if (parsedDataCE && parsedDataCE.candles && Array.isArray(parsedDataCE.candles)) {
                     setRecordStockDataCE(parsedDataCE.candles);
                 } else {
                     console.error('Error: CE data is missing or invalid');
                 }
-                
+
                 if (parsedDataPE && parsedDataPE.candles && Array.isArray(parsedDataPE.candles)) {
                     setRecordStockDataPE(parsedDataPE.candles);
                 } else {
                     console.error('Error: PE data is missing or invalid');
                 }
-                
+
                 getSymbol();
             } catch (error) {
                 console.error(`Error fetching Records ${error.message}`);
             }
         }
     };
-    
+
     const handleExpirydate = async (event) => {
         const eventValue = event.target.value;
         const apiURL = `http://localhost:5000/option-chain/all/${index || symbol}/${eventValue}`;
@@ -314,6 +314,25 @@ const Page = () => {
         setComparisionSymbolMandT(symbols);
     };
 
+    // useEffect(() => {
+    //     const mainDataFunctions = async () => {
+    //         await Promise.all([
+    //             fetchRealTimeData(),
+    //             fetchSpotLTP(),
+    //             fetchFuturesData(),
+    //             fetchStrikePrices(),
+    //             fetchExpirydates()
+    //         ]);
+    //         if ((recordStockDataCE || recordStockDataPE) != '') {
+    //             getSymbol()
+    //         }
+    //     };
+
+    //     mainDataFunctions();
+    //     const intervalId = setInterval(mainDataFunctions, timeUpdateDuration);
+    //     return () => clearInterval(intervalId);
+    // }, [index, symbol, timeUpdateDuration, recordStockDataCE, recordStockDataPE]);
+
     useEffect(() => {
         const mainDataFunctions = async () => {
             await Promise.all([
@@ -330,9 +349,9 @@ const Page = () => {
 
         mainDataFunctions();
         const intervalId = setInterval(mainDataFunctions, timeUpdateDuration);
-        return () => clearInterval(intervalId);
-    }, [index, symbol, timeUpdateDuration, recordStockDataCE, recordStockDataPE]);
 
+        return () => clearInterval(intervalId);
+    }, [fetchExpirydates, fetchFuturesData, fetchRealTimeData, fetchSpotLTP, fetchStrikePrices, getSymbol, index, symbol, timeUpdateDuration, recordStockDataCE, recordStockDataPE]);
 
 
 
