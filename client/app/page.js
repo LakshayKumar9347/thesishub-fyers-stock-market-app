@@ -18,7 +18,7 @@ const Home = () => {
         <div className="container mx-auto text-center">
           <h1 className="text-4xl font-bold mb-4">Welcome to Stock Monitoring Dashboard</h1>
           <p className="text-lg">Stay updated with real-time stock quotes and financial data.</p>
-          <Link className='mx-2' href="/records">
+          <Link className='mx-2' href="/dashboard">
             <span className="bg-white text-black px-6 py-2 mt-8 inline-block rounded-full font-semibold hover:bg-indigo-300 hover:text-white transition duration-300">
               Explore Dashboard
             </span>
@@ -27,9 +27,9 @@ const Home = () => {
             <span className="bg-white text-black px-6 py-2 mt-8 inline-block rounded-full font-semibold hover:bg-indigo-300 hover:text-white transition duration-300">View Historical Data</span>
           </Link>
 
-          <Link className='mx-2' href="/records">
+          {/* <Link className='mx-2' href="/records">
             <span className="bg-white text-black px-6 py-2 mt-8 inline-block rounded-full font-semibold hover:bg-indigo-300 hover:text-white transition duration-300">View Records</span>
-          </Link>
+          </Link> */}
 
         </div>
       </section>

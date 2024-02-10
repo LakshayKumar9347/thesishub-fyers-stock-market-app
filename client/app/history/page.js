@@ -174,10 +174,10 @@ const Page = () => {
                             <p className="text-lg mb-6">Stay informed with the latest stock market data. Explore real-time
                                 updates, analyze market trends, and make informed decisions for your investments.</p>
                             <Link href="/dashboard">
-                                <PurpleButton data="Go to Dashboard" />
+                                <PurpleButton data="Explore Dashboard" />
                             </Link>
-                            <Link href="/records">
-                                <PurpleButton data="View records" />
+                            <Link href="/">
+                                <PurpleButton data="Go to Home" />
                             </Link>
                         </div>
                     </section>
