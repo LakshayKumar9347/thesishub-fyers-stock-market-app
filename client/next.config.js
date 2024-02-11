@@ -1,9 +1,6 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-    images: {
-        unoptimized: true
-    }, 
-    output: 'export'
-};
+require('dotenv').config();
 
-module.exports = nextConfig;
+const nextConfig = {}
+
+module.exports = nextConfig

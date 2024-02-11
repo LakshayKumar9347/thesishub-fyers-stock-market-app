@@ -6,11 +6,13 @@ import Link from 'next/link';
 import Purplebutton from './components/Purplebutton';
 
 const Home = () => {
+
   return (
     <div>
       <Head>
         <title>Stock Monitoring Dashboard</title>
         <meta name="description" content="Track stock quotes for better financial insights." />
+        <link rel='icon' href='/vercel.svg' />
       </Head>
 
       {/* Hero Section */}

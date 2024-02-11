@@ -11,9 +11,7 @@ const Page = () => {
     const [spotLTP, setSpotLTP] = useState([]);
     const [stockDataCE, setStockDataCE] = useState([]);
     const [stockDataPE, setStockDataPE] = useState([]);
-
     const [expiryDates, setexpiryDates] = useState([])
-
     const [comparisionSymbolMandT, setComparisionSymbolMandT] = useState('');
     const [recordStockDataCE, setRecordStockDataCE] = useState([]);
     const [recordStockDataPE, setRecordStockDataPE] = useState([]);
@@ -176,10 +174,8 @@ const Page = () => {
                 } else {
                     console.error('Error: PE data is missing or invalid');
                 }
-
-                getSymbol();
             } catch (error) {
-                console.error(`Error fetching Records ${error.message}`);
+                console.error(`Error fetching Records`,error);
             }
         }
     };
@@ -211,29 +207,24 @@ const Page = () => {
             clearSelectedStrikeStates();
         }
     }
-
-
     const handleTimeDurationChange = (event) => {
         const selectedTime = event.target.value;
         // console.log(selectedTime);
         setTimeUpdateDuration(parseInt(selectedTime));
     };
-
     function clearAllStates() {
         setStockDataCE([]);
         setStockDataPE([]);
         setSpotLTP([]);
         setSelectedStrikePrice('');
-        setRecordStockDataCE('');
-        setRecordStockDataPE('');
+        setRecordStockDataCE([]);
+        setRecordStockDataPE([]);
     }
-
     function clearSelectedStrikeStates() {
-        setRecordStockDataCE('');
-        setRecordStockDataPE('');
+        setRecordStockDataCE([]);
+        setRecordStockDataPE([]);
         setSelectedStrikePrice('');
     }
-
     function convertEpochToIndiaTime(epochTimestamp) {
         const epochMillis = epochTimestamp * 1000;
         const date = new Date(epochMillis);
@@ -247,7 +238,6 @@ const Page = () => {
 
         return indiaTime;
     }
-
     function formatEpochTimeToIST(epochTime) {
         const date = new Date(epochTime * 1000);
         const options = { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'long', year: 'numeric' };
@@ -257,7 +247,6 @@ const Page = () => {
 
         return istDateString;
     }
-
     const getSymbol = () => {
         const symbols = [];
         for (let i = 0; i < spotLTP.length - 1; i++) {
@@ -313,26 +302,6 @@ const Page = () => {
 
         setComparisionSymbolMandT(symbols);
     };
-
-    // useEffect(() => {
-    //     const mainDataFunctions = async () => {
-    //         await Promise.all([
-    //             fetchRealTimeData(),
-    //             fetchSpotLTP(),
-    //             fetchFuturesData(),
-    //             fetchStrikePrices(),
-    //             fetchExpirydates()
-    //         ]);
-    //         if ((recordStockDataCE || recordStockDataPE) != '') {
-    //             getSymbol()
-    //         }
-    //     };
-
-    //     mainDataFunctions();
-    //     const intervalId = setInterval(mainDataFunctions, timeUpdateDuration);
-    //     return () => clearInterval(intervalId);
-    // }, [index, symbol, timeUpdateDuration, recordStockDataCE, recordStockDataPE]);
-
     useEffect(() => {
         const mainDataFunctions = async () => {
             await Promise.all([
@@ -342,19 +311,15 @@ const Page = () => {
                 fetchStrikePrices(),
                 fetchExpirydates()
             ]);
-            if ((recordStockDataCE || recordStockDataPE) != '') {
+            if ((recordStockDataCE || recordStockDataPE).length != 0) {
                 getSymbol()
             }
         };
 
         mainDataFunctions();
         const intervalId = setInterval(mainDataFunctions, timeUpdateDuration);
-
         return () => clearInterval(intervalId);
-    }, [fetchExpirydates, fetchFuturesData, fetchRealTimeData, fetchSpotLTP, fetchStrikePrices, getSymbol, index, symbol, timeUpdateDuration, recordStockDataCE, recordStockDataPE]);
-
-
-
+    }, [index, symbol, timeUpdateDuration, recordStockDataCE, recordStockDataPE]);
     return (
         <>
             <Navbar />
@@ -412,8 +377,6 @@ const Page = () => {
                                     )}
                                 </select>
                             </div>
-
-
                             <div>
                                 <label className="text-gray-700" htmlFor="strikeDropdown">
                                     Select Strike Price:
