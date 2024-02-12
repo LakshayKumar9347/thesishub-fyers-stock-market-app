@@ -8,7 +8,7 @@ const Navbar = () => {
     const [price, setprice] = useState('')
     const fetchPrice = async (symbol) => {
         try {
-            const response = await fetch(`http://localhost:5000/api/v3/ticker/${symbol}`);
+            const response = await fetch(`https://thesishub.in/marketfeed/api/v3/ticker/${symbol}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
