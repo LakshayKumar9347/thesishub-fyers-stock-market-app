@@ -11,7 +11,6 @@ fyers.setAccessToken(process.env.ACCESS_TOKEN);
 
 // Generates Stike prices of Symbol or of a particular date given in param
 router.get('/all/:symbol/:date?', async (req, res) => {
-    console.log("request incomning");
     const validStockSymbols = ['nifty', 'banknifty', 'sensex', 'finnifty', 'midcpnifty', 'bankex', 'reliance', 'bajfinance', 'hdfcbank', 'sbin', 'axisbank', 'icicibank', 'infy', 'tcs'];
     const symbol = req.params.symbol.toLowerCase();
     const date = req.params.date;
@@ -21,6 +20,7 @@ router.get('/all/:symbol/:date?', async (req, res) => {
     }
     const apiUrl = `${process.env.MAIN_URL}/api/v3/ticker/${symbol}`;
     const tickerEndpoint = apiUrl;
+    console.log(tickerEndpoint);
     try {
         const tickerResponse = await axios.get(tickerEndpoint);
         const ltp = tickerResponse.data.d[0].v.lp;
@@ -177,18 +177,15 @@ function generateStrikePrices(roundLTP, totalStrikePrices, symbol, date = '') {
 
         const month = (nextWeekday.getMonth() + 1).toString().padStart(2, '0');
         const day = nextWeekday.getDate().toString().padStart(2, '0');
-
         return { month, day };
     }
     function getLastWeekdayOfMonth(date, dayIndex) {
         const lastDayOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
         const lastDayOfWeek = lastDayOfMonth.getDay(); // Day of the week of the last day of the month
-
         let daysUntilLastWeekday = dayIndex - lastDayOfWeek;
         if (daysUntilLastWeekday > 0) {
             daysUntilLastWeekday -= 7; // Adjust if the target day is after the last day of the month
         }
-
         const lastWeekday = new Date(lastDayOfMonth);
         lastWeekday.setDate(lastDayOfMonth.getDate() + daysUntilLastWeekday);
 
@@ -234,8 +231,8 @@ function generateStrikePrices(roundLTP, totalStrikePrices, symbol, date = '') {
 
     const gap = symbolConfig[symbol]
     const currentDate = new Date();
-    let day, month, year, alpaMonth;
 
+    let day, month, year, alpaMonth;
 
     if (date !== '' && symbol) {
         switch (symbol) {
@@ -303,7 +300,7 @@ function generateStrikePrices(roundLTP, totalStrikePrices, symbol, date = '') {
                 break;
         }
     }
-
+console.log(day,month,year);
     let monthShort;
 
     if (month >= 1 && month <= 9) {

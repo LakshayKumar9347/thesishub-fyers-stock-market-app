@@ -26,7 +26,7 @@ const Page = () => {
     const fetchRealTimeData = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`https://thesishub.in/marketfeed/option-chain/all/${index || symbol}`);
+            const response = await fetch(`http://localhost:5000/option-chain/all/${index || symbol}`);
 
             if (!response.ok) {
                 throw new Error(`Failed to fetch data. HTTP error! Status: ${response.status}`);
@@ -53,7 +53,7 @@ const Page = () => {
     const fetchStrikePrices = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`https://thesishub.in/marketfeed/option-chain/strikes/${index || symbol}`);
+            const response = await fetch(`http://localhost:5000/option-chain/strikes/${index || symbol}`);
             const parsedData = await response.json();
             const strikePrices = parsedData;
             setStrikePrices(strikePrices);
@@ -68,7 +68,7 @@ const Page = () => {
     const fetchExpirydates = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`https://thesishub.in/marketfeed/option-chain/expiry/${index || symbol}`);
+            const response = await fetch(`http://localhost:5000/option-chain/expiry/${index || symbol}`);
             const parsedData = await response.json();
             const expirydates = parsedData;
             setexpiryDates(expirydates[0])
@@ -81,7 +81,7 @@ const Page = () => {
     };
 
     const fetchSpotLTP = async () => {
-        const apiUrl = `https://thesishub.in/marketfeed/records/index/${index || symbol}`;
+        const apiUrl = `http://localhost:5000/records/index/${index || symbol}`;
         try {
             const response = await fetch(apiUrl);
             if (!response.ok) {
@@ -99,7 +99,7 @@ const Page = () => {
 
     const fetchFuturesData = async () => {
         try {
-            const apiUrl = `https://thesishub.in/marketfeed/api/v3/futures/${index || symbol}`;
+            const apiUrl = `http://localhost:5000/api/v3/futures/${index || symbol}`;
             const response = await fetch(apiUrl);
             if (!response.ok) {
                 throw new Error(`Error fetching futures data for ${index || symbol}`);
@@ -132,25 +132,6 @@ const Page = () => {
         setSymbol(newSymbol);
     };
 
-    // const handleStrikeChange = async (event) => {
-    //     const eventValue = event.target.value;
-    //     setSelectedStrikePrice([eventValue]);
-    //     if (eventValue === '') {
-    //         clearSelectedStrikeStates();
-    //     } else {
-    //         try {
-    //             const responseCE = await fetch(`https://thesishub.in/marketfeed/records/ce/${index || symbol}/${eventValue}`);
-    //             const responsePE = await fetch(`https://thesishub.in/marketfeed/records/pe/${index || symbol}/${eventValue}`);
-    //             const parsedDataCE = await responseCE.json();
-    //             const parsedDataPE = await responsePE.json();
-    //             setRecordStockDataCE(parsedDataCE.candles);
-    //             setRecordStockDataPE(parsedDataPE.candles);
-    //             getSymbol();
-    //         } catch (error) {
-    //             console.error(`Error fetching Records ${error.message}`);
-    //         }
-    //     }
-    // };
     const handleStrikeChange = async (event) => {
         const eventValue = event.target.value;
         setSelectedStrikePrice([eventValue]);
@@ -158,8 +139,8 @@ const Page = () => {
             clearSelectedStrikeStates();
         } else {
             try {
-                const responseCE = await fetch(`https://thesishub.in/marketfeed/records/ce/${index || symbol}/${eventValue}`);
-                const responsePE = await fetch(`https://thesishub.in/marketfeed/records/pe/${index || symbol}/${eventValue}`);
+                const responseCE = await fetch(`http://localhost:5000/records/ce/${index || symbol}/${eventValue}`);
+                const responsePE = await fetch(`http://localhost:5000/records/pe/${index || symbol}/${eventValue}`);
                 const parsedDataCE = await responseCE.json();
                 const parsedDataPE = await responsePE.json();
 
@@ -182,7 +163,7 @@ const Page = () => {
 
     const handleExpirydate = async (event) => {
         const eventValue = event.target.value;
-        const apiURL = `https://thesishub.in/marketfeed/option-chain/all/${index || symbol}/${eventValue}`;
+        const apiURL = `http://localhost:5000/option-chain/all/${index || symbol}/${eventValue}`;
         setselectedExpiryDate([eventValue]);
         setLoading(true);
 
@@ -190,7 +171,7 @@ const Page = () => {
             try {
                 const response = await fetch(apiURL);
                 if (!response.ok) {
-                    throw new Error(`Failed to fetch data. HTTP error! Status: ${response.status}`);
+                    throw new Error(`Failed to fetch Strike Prices For the Given Expiry Date`);
                 }
                 const parsedData = await response.json();
                 const dataArray = parsedData.d || [];
@@ -198,6 +179,8 @@ const Page = () => {
                 const stockDataPE = dataArray.slice(9);
                 setStockDataCE(stockDataCE);
                 setStockDataPE(stockDataPE);
+                console.log(stockDataCE);
+                console.log(stockDataPE);
             } catch (error) {
                 console.error('Error fetching data:', error);
             } finally {
