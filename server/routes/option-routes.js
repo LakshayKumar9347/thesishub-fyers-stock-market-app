@@ -11,14 +11,16 @@ fyers.setAccessToken(process.env.ACCESS_TOKEN);
 
 // Generates Stike prices of Symbol or of a particular date given in param
 router.get('/all/:symbol/:date?', async (req, res) => {
+    console.log("request incomning");
     const validStockSymbols = ['nifty', 'banknifty', 'sensex', 'finnifty', 'midcpnifty', 'bankex', 'reliance', 'bajfinance', 'hdfcbank', 'sbin', 'axisbank', 'icicibank', 'infy', 'tcs'];
     const symbol = req.params.symbol.toLowerCase();
     const date = req.params.date;
     // console.log(typeof (date));
     if (!validStockSymbols.includes(symbol)) {
-        return res.status(400).json({ error: 'Invalid stock symbol' });
+        return res.status(400).json({ "error": 'Invalid stock symbol' });
     }
-    const tickerEndpoint = `${process.env.MAIN_URL}/api/v3/ticker/${symbol}`;
+    const apiUrl = `${process.env.MAIN_URL}/api/v3/ticker/${symbol}`;
+    const tickerEndpoint = apiUrl;
     try {
         const tickerResponse = await axios.get(tickerEndpoint);
         const ltp = tickerResponse.data.d[0].v.lp;
@@ -28,8 +30,8 @@ router.get('/all/:symbol/:date?', async (req, res) => {
         const data = await fyers.getQuotes(strikePrices)
         res.send(data)
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error fetching last traded price' });
+        console.error('error');
+        res.status(500).json({ "`error`": 'Error fetching last traded price' });
     }
 });
 // Return Array of Expiry Dates as per the Symbol
@@ -163,205 +165,6 @@ function calculateRoundedLTP(ltp, symbol) {
     }
     return Math.round(ltp / gap) * gap;
 }
-// Generate Strike Prices with Symbols
-// function generateStrikePrices(roundLTP, totalStrikePrices, symbol, date = '') {
-//     const strikePricesCE = [];
-//     const strikePricesPE = [];
-//     const numStrikesBefore = totalStrikePrices;
-//     const numStrikesAfter = totalStrikePrices;
-//     function getNextWeekday(date, dayIndex) {
-//         const daysUntilNextWeekday = (dayIndex - date.getDay() + 7) % 7;
-//         const nextWeekday = new Date(date);
-//         nextWeekday.setDate(date.getDate() + daysUntilNextWeekday);
-
-//         const month = (nextWeekday.getMonth() + 1).toString().padStart(2, '0');
-//         const day = nextWeekday.getDate().toString().padStart(2, '0');
-
-//         return { month, day };
-//     }
-//     function getLastWeekdayOfMonth(date, dayIndex) {
-//         const lastDayOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-//         const lastDayOfWeek = lastDayOfMonth.getDay(); // Day of the week of the last day of the month
-
-//         let daysUntilLastWeekday = dayIndex - lastDayOfWeek;
-//         if (daysUntilLastWeekday > 0) {
-//             daysUntilLastWeekday -= 7; // Adjust if the target day is after the last day of the month
-//         }
-
-//         const lastWeekday = new Date(lastDayOfMonth);
-//         lastWeekday.setDate(lastDayOfMonth.getDate() + daysUntilLastWeekday);
-
-//         const month = (lastWeekday.getMonth() + 1).toString().padStart(2, '0');
-//         const day = lastWeekday.getDate().toString().padStart(2, '0');
-
-//         return { month, day };
-//     }
-//     function numericToShortMonth(month) {
-//         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-//         return months[month - 1] || '';
-//     }
-//     const symbolConfig = {
-//         'nifty': 50,
-//         'finnifty': 50,
-//         'bajfinance': 50,
-//         'banknifty': 100,
-//         'sensex': 100,
-//         'bankex': 100,
-//         'midcpnifty': 25,
-//         'reliance': 20,
-//         'tcs': 20,
-//         'hdfcbank': 10,
-//         'infy': 10,
-//         'sbin': 5,
-//         'axisbank': 10,
-//         'icicibank': 5
-//     };
-
-//     const gap = symbolConfig[symbol]
-//     const currentDate = new Date();
-//     let day, month, alpaMonth, year;
-
-
-//     if (date !== '' && symbol) {
-//         const [inputDay, inputMonth, inputYear] = date.split('-');
-//         const UserInputday = inputDay.padStart(2, '0');
-//         const monthTypeString = Number(new Date(Date.parse(inputMonth + ' 1, 2000')).getMonth() + 1).toString().padStart(2, '0');
-//         const UserInputMonth = Number(monthTypeString)
-//         const UserInputYear = inputYear.slice(-2);
-//         console.log("first", UserInputday, UserInputMonth, UserInputYear);
-//         switch (symbol) {
-//             case 'nifty':
-//                 ({ month, day } = getLastWeekdayOfMonth(currentDate, 4))
-//                 if (UserInputday === day) {
-//                     day = 69;
-//                     alpaMonth = numericToShortMonth(UserInputMonth)
-//                     month = numericToShortMonth(UserInputMonth)
-//                     year = UserInputYear
-//                 } else {
-//                     day = UserInputday
-//                 }
-//                 break;
-//             case 'banknifty':
-//                 ({ month, day } = getLastWeekdayOfMonth(currentDate, 3))
-//                 if (UserInputday === day) {
-//                     day = 69;
-//                     alpaMonth = numericToShortMonth(UserInputMonth)
-//                     month = numericToShortMonth(UserInputMonth)
-//                     year = UserInputYear
-//                 } else {
-//                     day = UserInputday
-//                 }
-//                 break;
-//             case 'finnifty':
-//                 ({ month, day } = getLastWeekdayOfMonth(currentDate, 2))
-//                 if (UserInputday === day) {
-//                     day = 69;
-//                     alpaMonth = numericToShortMonth(UserInputMonth)
-//                     month = numericToShortMonth(UserInputMonth)
-//                     year = UserInputYear
-//                 } else {
-//                     day = UserInputday
-//                 }
-//                 break;
-//             case 'midcpnifty':
-//                 ({ month, day } = getLastWeekdayOfMonth(currentDate, 1))
-//                 if (UserInputday === day) {
-//                     day = 69;
-//                     alpaMonth = numericToShortMonth(UserInputMonth)
-//                     month = numericToShortMonth(UserInputMonth)
-//                     year = UserInputYear
-//                 } else {
-//                     day = UserInputday
-//                 }
-//                 break;
-//             case 'sensex':
-//                 ({ month, day } = getLastWeekdayOfMonth(currentDate, 5))
-//                 if (UserInputday === day) {
-//                     day = 69;
-//                     alpaMonth = numericToShortMonth(UserInputMonth)
-//                     month = numericToShortMonth(UserInputMonth)
-//                     year = UserInputYear
-//                 } else {
-//                     day = UserInputday
-//                 }
-//                 break;
-//             case 'bankex':
-//                 ({ month, day } = getLastWeekdayOfMonth(currentDate, 1))
-//                 if (UserInputday === day) {
-//                     day = 69;
-//                     alpaMonth = numericToShortMonth(UserInputMonth)
-//                     month = numericToShortMonth(UserInputMonth)
-//                     year = UserInputYear
-//                 } else {
-//                     day = UserInputday
-//                 }
-//                 break;
-//             default:
-//                 break;
-//         }
-//     } else {
-//         switch (symbol) {
-//             case 'nifty':
-//                 ({ month, day } = getNextWeekday(currentDate, 4))
-//                 break;
-//             case 'banknifty':
-//                 ({ month, day } = getNextWeekday(currentDate, 3))
-//                 break;
-//             case 'finnifty':
-//                 ({ month, day } = getNextWeekday(currentDate, 2))
-//                 break;
-//             case 'midcpnifty':
-//                 ({ month, day } = getNextWeekday(currentDate, 1))
-//                 break;
-//             case 'sensex':
-//                 ({ month, day } = getNextWeekday(currentDate, 5))
-//                 break;
-//             case 'bankex':
-//                 ({ month, day } = getNextWeekday(currentDate, 1))
-//                 break;
-//             default:
-//                 alpaMonth = new Date().toLocaleString('default', { month: 'short' }).toUpperCase();
-//                 day = 69
-//                 break;
-//         }
-//     }
-
-
-
-//     let monthShort;
-
-//     if (month >= 1 && month <= 9) {
-//         monthShort = month.toString().slice(-1);
-//     } else if (month === 10) {
-//         monthShort = 'O';
-//     } else if (month === 11) {
-//         monthShort = 'N';
-//     } else if (month === 12) {
-//         monthShort = 'D';
-//     } else if (month === alpaMonth) {
-//         monthShort = alpaMonth
-//     } else {
-//         monthShort = alpaMonth;
-//     }
-
-//     console.log("day", day)
-//     console.log("month", month);
-//     console.log("monthshort", monthShort);
-
-//     const yearShort = year || currentDate.toLocaleDateString('en-US', { year: '2-digit' }).slice(-2);
-
-//     if (totalStrikePrices != 0) {
-//         for (let i = -numStrikesBefore; i <= numStrikesAfter; i++) {
-//             const strikePrice = roundLTP + i * gap;
-//             const formattedSymbolCE = `${symbol === 'sensex' || symbol === 'bankex' ? 'BSE' : 'NSE'}:${symbol.toUpperCase()}${yearShort}${monthShort}${day === 69 ? '' : day}${strikePrice}CE`;
-//             const formattedSymbolPE = `${symbol === 'sensex' || symbol === 'bankex' ? 'BSE' : 'NSE'}:${symbol.toUpperCase()}${yearShort}${monthShort}${day === 69 ? '' : day}${strikePrice}PE`;
-
-//             strikePricesCE.push(formattedSymbolCE);
-//             strikePricesPE.push(formattedSymbolPE);
-//         }
-//     }
-//     return [strikePricesCE, strikePricesPE];
-// }
 function generateStrikePrices(roundLTP, totalStrikePrices, symbol, date = '') {
     const strikePricesCE = [];
     const strikePricesPE = [];
