@@ -136,7 +136,7 @@ router.get('/status', (req, res) => {
     })
 })
 router.get('/futures/:symbol', async (req, res) => {
-    const currentDate = new Date();
+    const currentDate = new Date("09-Feb-2024");
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
 
