@@ -14,13 +14,11 @@ router.get('/all/:symbol/:date?', async (req, res) => {
     const validStockSymbols = ['nifty', 'banknifty', 'sensex', 'finnifty', 'midcpnifty', 'bankex', 'reliance', 'bajfinance', 'hdfcbank', 'sbin', 'axisbank', 'icicibank', 'infy', 'tcs'];
     const symbol = req.params.symbol.toLowerCase();
     const date = req.params.date;
-    // console.log(typeof (date));
     if (!validStockSymbols.includes(symbol)) {
         return res.status(400).json({ "error": 'Invalid stock symbol' });
     }
     const apiUrl = `${process.env.MAIN_URL}/api/v3/ticker/${symbol}`;
     const tickerEndpoint = apiUrl;
-    console.log(tickerEndpoint);
     try {
         const tickerResponse = await axios.get(tickerEndpoint);
         const ltp = tickerResponse.data.d[0].v.lp;
@@ -30,7 +28,7 @@ router.get('/all/:symbol/:date?', async (req, res) => {
         const data = await fyers.getQuotes(strikePrices)
         res.send(data)
     } catch (error) {
-        console.error('error');
+        console.error('Error in Requesting String Prices');
         res.status(500).json({ "`error`": 'Error fetching last traded price' });
     }
 });
@@ -79,9 +77,10 @@ router.get('/strikes/:symbol', async (req, res) => {
         res.status(500).json({ error: 'Error fetching last traded price' });
     }
 });
+
 // Generate next Expiry Dates
 function getNextExpiryDates(symbols) {
-    const today = new Date("09-Feb-2024");
+    const today = new Date();
     const expiryDates = [];
 
     function getNextWeekday(date, dayIndex) {
@@ -142,7 +141,6 @@ function getNextExpiryDates(symbols) {
 
     return expiryDates;
 }
-// Calculate Rounded LTP based on symbol
 function calculateRoundedLTP(ltp, symbol) {
     let gap;
     if (ltp && symbol) {
@@ -189,28 +187,19 @@ function generateStrikePrices(roundLTP, totalStrikePrices, symbol, date = '') {
         const lastWeekday = new Date(lastDayOfMonth);
         lastWeekday.setDate(lastDayOfMonth.getDate() + daysUntilLastWeekday);
 
-        const month = (lastWeekday.getMonth() + 1).toString().padStart(2, '0');
-        const day = lastWeekday.getDate().toString().padStart(2, '0');
+        const month = Number((lastWeekday.getMonth() + 1).toString().padStart(2, '0'));
+        const day = Number(lastWeekday.getDate().toString().padStart(2, '0'));
 
         return { month, day };
     }
-    function shortMonthToNumeric(shortMonth) {
-        const monthMap = {
-            'JAN': 1,
-            'FEB': 2,
-            'MAR': 3,
-            'APR': 4,
-            'MAY': 5,
-            'JUN': 6,
-            'JUL': 7,
-            'AUG': 8,
-            'SEP': 9,
-            'OCT': 10,
-            'NOV': 11,
-            'DEC': 12
-        };
-        const uppercaseMonth = shortMonth.toUpperCase();
-        return monthMap[uppercaseMonth] || null;
+    function numericToShortMonth(numericMonth) {
+        const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+        const index = numericMonth - 1;
+        if (index >= 0 && index < months.length) {
+            return months[index];
+        } else {
+            return "Invalid month";
+        }
     }
     const symbolConfig = {
         'nifty': 50,
@@ -228,53 +217,54 @@ function generateStrikePrices(roundLTP, totalStrikePrices, symbol, date = '') {
         'axisbank': 10,
         'icicibank': 5
     };
-
     const gap = symbolConfig[symbol]
-    const currentDate = new Date();
 
+    let currentDate;
     let day, month, year, alpaMonth;
 
     if (date !== '' && symbol) {
+        currentDate = new Date(date)
         switch (symbol) {
             case 'nifty':
-                ({ month, day } = getLastWeekdayOfMonth(currentDate, 4))
+                ({ month, day } = getLastWeekdayOfMonth(currentDate, 4));
                 break;
             case 'banknifty':
-                ({ month, day } = getLastWeekdayOfMonth(currentDate, 3))
+                ({ month, day } = getLastWeekdayOfMonth(currentDate, 3));
                 break;
             case 'finnifty':
-                ({ month, day } = getLastWeekdayOfMonth(currentDate, 2))
+                ({ month, day } = getLastWeekdayOfMonth(currentDate, 2));
                 break;
             case 'midcpnifty':
-                ({ month, day } = getLastWeekdayOfMonth(currentDate, 1))
+                ({ month, day } = getLastWeekdayOfMonth(currentDate, 1));
                 break;
             case 'sensex':
-                ({ month, day } = getLastWeekdayOfMonth(currentDate, 5))
+                ({ month, day } = getLastWeekdayOfMonth(currentDate, 5));
                 break;
             case 'bankex':
-                ({ month, day } = getLastWeekdayOfMonth(currentDate, 1))
+                ({ month, day } = getLastWeekdayOfMonth(currentDate, 1));
                 break;
             default:
-                ({ month, day } = getLastWeekdayOfMonth(currentDate, 4))
+                ({ month, day } = getLastWeekdayOfMonth(currentDate, 4));
+                alpaMonth = currentDate.toLocaleString('default', { month: 'short' }).toUpperCase();
                 break;
         }
         const [inputDay, inputMonth, inputYear] = date.split('-');
-        const UserInputday = inputDay.padStart(2, '0');
-        const monthTypeString = Number(new Date(Date.parse(inputMonth + ' 1, 2000')).getMonth() + 1).toString().padStart(2, '0');
-        const UserInputMonth = Number(monthTypeString);
-        const UserInputYear = inputYear.slice(-2);
-        // console.log(UserInputday,UserInputMonth,UserInputYear);
+        const UserInputday = Number(inputDay.padStart(2, '0'));
+        const UserInputMonth = Number((new Date(Date.parse(`${inputMonth} 1, 2000`)).getMonth() + 1).toString().padStart(2, '0'));
+        const UserInputYear = Number(inputYear.slice(-2));
+
         if (UserInputday === day) {
             day = 69;
             year = UserInputYear;
-            month = shortMonthToNumeric(UserInputMonth)
-            alpaMonth = shortMonthToNumeric(UserInputMonth)
+            month = numericToShortMonth(UserInputMonth);
+            alpaMonth = numericToShortMonth(UserInputMonth);
         } else {
-            day =UserInputday;
-            year = Number(UserInputYear);
+            day = UserInputday;
+            year = UserInputYear;
             month = UserInputMonth;
         }
     } else {
+        currentDate = new Date()
         switch (symbol) {
             case 'nifty':
                 ({ month, day } = getNextWeekday(currentDate, 4))
@@ -298,9 +288,10 @@ function generateStrikePrices(roundLTP, totalStrikePrices, symbol, date = '') {
                 alpaMonth = new Date().toLocaleString('default', { month: 'short' }).toUpperCase();
                 day = 69
                 break;
+
         }
     }
-console.log(day,month,year);
+
     let monthShort;
 
     if (month >= 1 && month <= 9) {
@@ -318,20 +309,17 @@ console.log(day,month,year);
     }
 
     const yearShort = year || currentDate.toLocaleDateString('en-US', { year: '2-digit' }).slice(-2);
-
     if (totalStrikePrices != 0) {
         for (let i = -numStrikesBefore; i <= numStrikesAfter; i++) {
             const strikePrice = roundLTP + i * gap;
             const formattedSymbolCE = `${symbol === 'sensex' || symbol === 'bankex' ? 'BSE' : 'NSE'}:${symbol.toUpperCase()}${yearShort}${monthShort}${day === 69 ? '' : day}${strikePrice}CE`;
             const formattedSymbolPE = `${symbol === 'sensex' || symbol === 'bankex' ? 'BSE' : 'NSE'}:${symbol.toUpperCase()}${yearShort}${monthShort}${day === 69 ? '' : day}${strikePrice}PE`;
-
             strikePricesCE.push(formattedSymbolCE);
             strikePricesPE.push(formattedSymbolPE);
         }
     }
     return [strikePricesCE, strikePricesPE];
 }
-
 function generateStrikePricesSingle(roundLTP, totalStrikePrices, symbol) {
     const strikePricesCE = [];
     const strikePricesPE = [];
@@ -424,7 +412,6 @@ function generateStrikePricesSingle(roundLTP, totalStrikePrices, symbol) {
     }
     return [strikePricesCE, strikePricesPE];
 }
-// Generate Strike Price in Numeric
 function generateStrikePricesNumeric(roundLTP, totalStrikePrices, symbol) {
     const strikePrices = [];
     const numStrikesBefore = totalStrikePrices;
@@ -453,5 +440,4 @@ function generateStrikePricesNumeric(roundLTP, totalStrikePrices, symbol) {
 
     return strikePrices;
 }
-
 module.exports = router;

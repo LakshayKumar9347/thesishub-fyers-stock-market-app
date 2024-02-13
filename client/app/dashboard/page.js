@@ -8,6 +8,7 @@ import Loading from '../components/Loading';
 
 const Page = () => {
     const [loading, setLoading] = useState(true);
+    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [spotLTP, setSpotLTP] = useState([]);
     const [stockDataCE, setStockDataCE] = useState([]);
     const [stockDataPE, setStockDataPE] = useState([]);
@@ -15,11 +16,13 @@ const Page = () => {
     const [comparisionSymbolMandT, setComparisionSymbolMandT] = useState('');
     const [recordStockDataCE, setRecordStockDataCE] = useState([]);
     const [recordStockDataPE, setRecordStockDataPE] = useState([]);
-    const [timeUpdateDuration, setTimeUpdateDuration] = useState(60000);
+    const [timeUpdateDuration, setTimeUpdateDuration] = useState(30000);
     const [futuresData, setFuturesData] = useState([]);
+    const [futureLtpDataRecord, setfutureLtpDataRecord] = useState([])
     const [strikePrices, setStrikePrices] = useState([]);
     const [selectedExpiryDate, setselectedExpiryDate] = useState('')
     const [selectedStrikePrice, setSelectedStrikePrice] = useState('');
+    const [selectedStrikeValueString, setselectedStrikeValueString] = useState('')
     const [symbol, setSymbol] = useState('');
     const [index, setIndex] = useState('nifty');
 
@@ -43,11 +46,15 @@ const Page = () => {
                 setStockDataCE(stockDataCE);
                 setStockDataPE(stockDataPE);
             }
-            setLoading(false);
         } catch (error) {
             console.error('Error fetching real-time data:', error);
+        } finally {
             setLoading(false);
         }
+    };
+
+    const handleDateChange = (e) => {
+        setSelectedDate(e.target.value);
     };
 
     const fetchStrikePrices = async () => {
@@ -97,6 +104,24 @@ const Page = () => {
         }
     };
 
+    const fetchFuturesLTP = async () => {
+        try {
+            const apiUrl = `http://localhost:5000/api/v3/future-ltp/${index || symbol}`;
+            const response = await fetch(apiUrl);
+
+            if (!response.ok) {
+                throw new Error(`Error fetching futures data for ${index || symbol}`);
+            }
+
+            const data = await response.json();
+            const newData = data.candles;
+            setfutureLtpDataRecord(newData);
+
+        } catch (error) {
+            console.error('Error fetching futures data');
+        }
+    };
+
     const fetchFuturesData = async () => {
         try {
             const apiUrl = `http://localhost:5000/api/v3/futures/${index || symbol}`;
@@ -107,6 +132,7 @@ const Page = () => {
             const data = await response.json();
             const newData = data.d;
             setFuturesData(newData);
+
         } catch (error) {
             console.error('Error fetching futures data:', error);
         }
@@ -134,30 +160,45 @@ const Page = () => {
 
     const handleStrikeChange = async (event) => {
         const eventValue = event.target.value;
+        setselectedStrikeValueString(eventValue);
         setSelectedStrikePrice([eventValue]);
+
         if (eventValue === '') {
             clearSelectedStrikeStates();
         } else {
             try {
-                const responseCE = await fetch(`http://localhost:5000/records/ce/${index || symbol}/${eventValue}`);
-                const responsePE = await fetch(`http://localhost:5000/records/pe/${index || symbol}/${eventValue}`);
-                const parsedDataCE = await responseCE.json();
-                const parsedDataPE = await responsePE.json();
-
-                if (parsedDataCE && parsedDataCE.candles && Array.isArray(parsedDataCE.candles)) {
-                    setRecordStockDataCE(parsedDataCE.candles);
-                } else {
-                    console.error('Error: CE data is missing or invalid');
-                }
-
-                if (parsedDataPE && parsedDataPE.candles && Array.isArray(parsedDataPE.candles)) {
-                    setRecordStockDataPE(parsedDataPE.candles);
-                } else {
-                    console.error('Error: PE data is missing or invalid');
-                }
+                await fetchRecordStockData(eventValue);
             } catch (error) {
-                console.error(`Error fetching Records`, error);
+                console.error(`Error fetching Record Stock Data: ${error}`);
             }
+        }
+    };
+
+    const fetchRecordStockData = async (value) => {
+        try {
+            const ceURL = `http://localhost:5000/records/ce/${index || symbol}/${value}`
+            const peURL = `http://localhost:5000/records/pe/${index || symbol}/${value}`
+            const responseCE = await fetch(ceURL);
+            const responsePE = await fetch(peURL);
+            if (!responseCE.ok || !responsePE.ok) {
+                throw new Error('Response not ok');
+            }
+            const parsedDataCE = await responseCE.json();
+            const parsedDataPE = await responsePE.json();
+
+            if (parsedDataCE && parsedDataCE.candles && Array.isArray(parsedDataCE.candles)) {
+                setRecordStockDataCE(parsedDataCE.candles);
+            } else {
+                console.error('Error: CE data is missing or invalid');
+            }
+
+            if (parsedDataPE && parsedDataPE.candles && Array.isArray(parsedDataPE.candles)) {
+                setRecordStockDataPE(parsedDataPE.candles);
+            } else {
+                console.error('Error: PE data is missing or invalid');
+            }
+        } catch (error) {
+            console.error(`Error fetching Records: ${error}`);
         }
     };
 
@@ -179,8 +220,6 @@ const Page = () => {
                 const stockDataPE = dataArray.slice(9);
                 setStockDataCE(stockDataCE);
                 setStockDataPE(stockDataPE);
-                console.log(stockDataCE);
-                console.log(stockDataPE);
             } catch (error) {
                 console.error('Error fetching data:', error);
             } finally {
@@ -189,12 +228,14 @@ const Page = () => {
         } else {
             clearSelectedStrikeStates();
         }
-    }
+    };
+
     const handleTimeDurationChange = (event) => {
         const selectedTime = event.target.value;
         // console.log(selectedTime);
         setTimeUpdateDuration(parseInt(selectedTime));
     };
+
     function clearAllStates() {
         setStockDataCE([]);
         setStockDataPE([]);
@@ -202,12 +243,14 @@ const Page = () => {
         setSelectedStrikePrice('');
         setRecordStockDataCE([]);
         setRecordStockDataPE([]);
-    }
+    };
+
     function clearSelectedStrikeStates() {
         setRecordStockDataCE([]);
         setRecordStockDataPE([]);
         setSelectedStrikePrice('');
-    }
+    };
+
     function convertEpochToIndiaTime(epochTimestamp) {
         const epochMillis = epochTimestamp * 1000;
         const date = new Date(epochMillis);
@@ -220,7 +263,8 @@ const Page = () => {
         const indiaTime = date.toLocaleString('en-IN', options);
 
         return indiaTime;
-    }
+    };
+
     function formatEpochTimeToIST(epochTime) {
         const date = new Date(epochTime * 1000);
         const options = { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'long', year: 'numeric' };
@@ -229,7 +273,8 @@ const Page = () => {
         const istDateString = istFormatter.format(date);
 
         return istDateString;
-    }
+    };
+
     const getSymbol = () => {
         const symbols = [];
         for (let i = 0; i < spotLTP.length - 1; i++) {
@@ -287,22 +332,22 @@ const Page = () => {
     };
     useEffect(() => {
         const mainDataFunctions = async () => {
-            await Promise.all([
-                fetchRealTimeData(),
-                fetchSpotLTP(),
-                fetchFuturesData(),
-                fetchStrikePrices(),
-                fetchExpirydates()
-            ]);
-            if ((recordStockDataCE || recordStockDataPE).length != 0) {
-                getSymbol()
-            }
+            await fetchExpirydates();
+            await fetchStrikePrices();
+            await fetchSpotLTP();
+            await fetchRealTimeData();
+            // await fetchFuturesData();
+             await fetchFuturesLTP();  // reached its limit
+
+
         };
 
         mainDataFunctions();
-        const intervalId = setInterval(mainDataFunctions, timeUpdateDuration);
+        const intervalId = setInterval(mainDataFunctions, 60000 );
+
         return () => clearInterval(intervalId);
-    }, [index, symbol, timeUpdateDuration, recordStockDataCE, recordStockDataPE]);
+    }, [index, symbol, timeUpdateDuration]);
+
     return (
         <>
             <Navbar />
@@ -404,6 +449,20 @@ const Page = () => {
                         </div>
                     </div>
 
+                    <div className="flex justify-end">
+                        <div className='mb-3'>
+                            <label className="text-gray-700" htmlFor="datePicker">
+                                Choose a Date:
+                            </label>
+                            <input
+                                type="date"
+                                id="datePicker"
+                                className="border border-gray-400 rounded p-1 ml-2 text-sm"
+                                onChange={handleDateChange}
+                            />
+                        </div>
+                    </div>
+
                     <div className="overflow-x-auto">
                         <div className="table-container">
                             <div className="max-h-96 overflow-y-auto">
@@ -425,11 +484,11 @@ const Page = () => {
                                             <tr key={index}>
                                                 <td className="px-4 py-2 text-center border">{convertEpochToIndiaTime(value[0])}</td>
                                                 <td className="px-4 py-2 text-center border">{value[4]}</td>
-                                                <td className="px-4 py-2 text-center border">{futuresData.length > 0 ? futuresData[0]?.v.lp : 'Loading...'}</td>
+                                                <td className="px-4 py-2 text-center border">{futureLtpDataRecord.length > 0 ? (futureLtpDataRecord[index]?.[4]) : 'Loading...'}</td>
                                                 <td className="px-4 py-2 text-center border">{futuresData.length > 0 ? (futuresData[0].v.lp - value[4]).toFixed(2) : 'Loading...'}</td>
                                                 {selectedStrikePrice === '' && <td className="px-4 py-2 text-center border">{Array.isArray(strikePrices) && strikePrices.length > 0 ? strikePrices[index] : 'Loading...'}</td>}
-                                                <td className="px-4 py-2 text-center border">{recordStockDataCE.length === 0 ? stockDataCE[index]?.v.lp : (recordStockDataCE[index][4])}</td>
-                                                <td className="px-4 py-2 text-center border">{recordStockDataPE.length === 0 ? stockDataPE[index]?.v.lp : (recordStockDataPE[index][4])}</td>
+                                                <td className="px-4 py-2 text-center border">{recordStockDataCE.length == 0 ? stockDataCE[index]?.v.lp : (recordStockDataCE[index]?.[4])}</td>
+                                                <td className="px-4 py-2 text-center border">{recordStockDataPE.length == 0 ? stockDataPE[index]?.v.lp : (recordStockDataPE[index]?.[4])}</td>
                                                 {(recordStockDataCE || recordStockDataPE).length != 0 && <td className="px-4 py-2 text-center border">{comparisionSymbolMandT[index]}</td>}
                                             </tr>
                                         ))}

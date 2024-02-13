@@ -25,7 +25,7 @@ router.get('/authenticate', async (req, res) => {
             auth_code: authCode,
         });
 
-        // console.log(response);
+        console.log(response);
         if (response.code === 200) {
             res.send('Access Token generated');
         } else {
@@ -74,7 +74,7 @@ router.get('/ticker/:symbol?', async (req, res) => {
     }
 });
 router.get('/history/:symbol', async (req, res) => {
-    const { symbol } = req.params;
+    const symbol = req.params.symbol.toLowerCase();
     const stockSymbols = {
         'nifty': 'NSE:NIFTY50-INDEX',
         'banknifty': 'NSE:NIFTYBANK-INDEX',
@@ -136,7 +136,7 @@ router.get('/status', (req, res) => {
     })
 })
 router.get('/futures/:symbol', async (req, res) => {
-    const currentDate = new Date("09-Feb-2024");
+    const currentDate = new Date();
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
 
@@ -207,4 +207,37 @@ router.get('/futures/:symbol', async (req, res) => {
     }
 });
 
+router.get('/future-ltp/:symbol', async (req, res) => {
+    const symbol = req.params.symbol.toLowerCase();
+    const date = new Date();
+    const formattedDate = formatDate(date); // Assuming formatDate function is defined elsewhere
+    try {
+        const response = await axios.get(`http://localhost:5000/api/v3/futures/${symbol}`);
+        const index = response.data.d[0].n;
+        var inp = {
+            "symbol": index,
+            "resolution": "1",
+            "date_format": "1",
+            "range_from": formattedDate,
+            "range_to": formattedDate,
+            "cont_flag": "1"
+        }
+        fyers.getHistory(inp).then((response) => {
+            // console.log(response)
+            res.send(response)
+        }).catch((err) => {
+            console.log("Future Ltp Reaced Its limit")
+        })
+    } catch (error) {
+        console.error("Error occurred:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+function formatDate(date) {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
 module.exports = router;

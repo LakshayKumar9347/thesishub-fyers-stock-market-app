@@ -24,6 +24,45 @@ const Page = () => {
     const [selectedStrikePrice, setSelectedStrikePrice] = useState('');
     const [symbol, setSymbol] = useState('');
     const [index, setIndex] = useState('nifty');
+    // useEffect(() => {
+    //     const mainDataFunctions = async () => {
+    //         await Promise.all([
+    //             fetchRealTimeData(),
+    //             fetchSpotLTP(),
+    //             fetchFuturesData(),
+    //             fetchFuturesLTP(),
+    //             fetchStrikePrices(),
+    //             fetchExpirydates()
+    //         ]);
+    //         if ((recordStockDataCE || recordStockDataPE).length != 0) {
+    //             getSymbol()
+    //         }
+    //     };
+    //     mainDataFunctions();
+    //     const intervalId = setInterval(mainDataFunctions, timeUpdateDuration);
+    //     return () => clearInterval(intervalId);
+    // }, [index, symbol, timeUpdateDuration, recordStockDataCE, recordStockDataPE]);
+
+    // useEffect(() => {
+    //     const mainDataFunctions = async () => {
+    //         await fetchRealTimeData();
+    //         await fetchSpotLTP();
+    //         await fetchStrikePrices();
+    //         await fetchFuturesLTP();
+    //         await fetchFuturesData();
+    //         if ((recordStockDataCE.length !== 0) && (recordStockDataPE.length !== 0)) {
+    //             // console.log("hello")
+    //             // console.log("Stock Data Length", stockDataCE.length, stockDataPE.length);
+    //             setStockDataCE([]);
+    //             setStockDataPE([]);
+    //             getSymbol();
+    //         }
+    //     };
+    //     mainDataFunctions();
+    //     const intervalId = setInterval(mainDataFunctions, 5000);
+
+    //     return () => clearInterval(intervalId);
+    // }, [index, symbol, timeUpdateDuration]);
 
     const fetchRealTimeData = async () => {
         try {
