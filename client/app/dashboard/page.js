@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Loading from '../components/Loading';
 
 const Page = () => {
+    // All the variable that we are using for storing the data in response
     const [loading, setLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [spotLTP, setSpotLTP] = useState([]);
@@ -18,7 +19,6 @@ const Page = () => {
     const [recordStockDataPE, setRecordStockDataPE] = useState([]);
     const [timeUpdateDuration, setTimeUpdateDuration] = useState(30000);
     const [futuresData, setFuturesData] = useState([]);
-    const [futureLtpDataRecord, setfutureLtpDataRecord] = useState([])
     const [strikePrices, setStrikePrices] = useState([]);
     const [selectedExpiryDate, setselectedExpiryDate] = useState('')
     const [selectedStrikePrice, setSelectedStrikePrice] = useState('');
@@ -26,10 +26,11 @@ const Page = () => {
     const [symbol, setSymbol] = useState('');
     const [index, setIndex] = useState('nifty');
 
+    // Mai Function Which Fetch Data from Server
     const fetchRealTimeData = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`/marketfeed/option-chain/all/${index || symbol}`);
+            const response = await fetch(`http://localhost:5000/option-chain/all/${index || symbol}`);
 
             if (!response.ok) {
                 throw new Error(`Failed to fetch data. HTTP error! Status: ${response.status}`);
@@ -52,15 +53,13 @@ const Page = () => {
             setLoading(false);
         }
     };
-
     const handleDateChange = (e) => {
         setSelectedDate(e.target.value);
     };
-
     const fetchStrikePrices = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`/marketfeed/option-chain/strikes/${index || symbol}`);
+            const response = await fetch(`http://localhost:5000/option-chain/strikes/${index || symbol}`);
             const parsedData = await response.json();
             const strikePrices = parsedData;
             setStrikePrices(strikePrices);
@@ -71,11 +70,10 @@ const Page = () => {
             throw new Error('Error fetching strike prices');
         }
     };
-
     const fetchExpirydates = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`/marketfeed/option-chain/expiry/${index || symbol}`);
+            const response = await fetch(`http://localhost:5000/option-chain/expiry/${index || symbol}`);
             const parsedData = await response.json();
             const expirydates = parsedData;
             setexpiryDates(expirydates[0])
@@ -86,9 +84,8 @@ const Page = () => {
             throw new Error('Error fetching strike prices');
         }
     };
-
     const fetchSpotLTP = async () => {
-        const apiUrl = `/marketfeed/records/index/${index || symbol}`;
+        const apiUrl = `http://localhost:5000/records/index/${index || symbol}`;
         try {
             const response = await fetch(apiUrl);
             if (!response.ok) {
@@ -103,10 +100,9 @@ const Page = () => {
             console.error(`Error fetching spot LTP: ${error.message}`);
         }
     };
-
-    const fetchFuturesLTP = async () => {
+    const fetchFuturesData = async () => {
         try {
-            const apiUrl = `/marketfeed/api/v3/future-ltp/${index || symbol}`;
+            const apiUrl = `http://localhost:5000/api/v3/futures/${index || symbol}`;
             const response = await fetch(apiUrl);
 
             if (!response.ok) {
@@ -120,24 +116,23 @@ const Page = () => {
         } catch (error) {
             console.error('Error fetching futures data');
         }
+
+        // todo Below code only Return Old Future data That Currently We dont want To we have comment this out
+        // try {
+        //     const apiUrl = `http://localhost:5000/api/v3/futures/${index || symbol}`;
+        //     const response = await fetch(apiUrl);
+        //     if (!response.ok) {
+        //         throw new Error(`Error fetching futures data for ${index || symbol}`);
+        //     }
+        //     const data = await response.json();
+        //     const newData = data.d;
+        //     setFuturesData(newData);
+
+        // } catch (error) {
+        //     console.error('Error fetching futures data:', error);
+        // }
+        // todo
     };
-
-    const fetchFuturesData = async () => {
-        try {
-            const apiUrl = `/marketfeed/api/v3/futures/${index || symbol}`;
-            const response = await fetch(apiUrl);
-            if (!response.ok) {
-                throw new Error(`Error fetching futures data for ${index || symbol}`);
-            }
-            const data = await response.json();
-            const newData = data.d;
-            setFuturesData(newData);
-
-        } catch (error) {
-            console.error('Error fetching futures data:', error);
-        }
-    };
-
     const handleIndexChange = (event) => {
         const newIndex = event.target.value;
         if (index === '' && newIndex !== '') {
@@ -147,7 +142,6 @@ const Page = () => {
         setLoading(true);
         setIndex(newIndex);
     };
-
     const handleSymbolChange = (event) => {
         const newSymbol = event.target.value;
         if (symbol === '' && newSymbol !== '') {
@@ -157,7 +151,6 @@ const Page = () => {
         setLoading(true);
         setSymbol(newSymbol);
     };
-
     const handleStrikeChange = async (event) => {
         const eventValue = event.target.value;
         setselectedStrikeValueString(eventValue);
@@ -175,11 +168,10 @@ const Page = () => {
             }
         }
     };
-
     const fetchRecordStockData = async (value) => {
         try {
-            const ceURL = `/marketfeed/records/ce/${index || symbol}/${value}`
-            const peURL = `/marketfeed/records/pe/${index || symbol}/${value}`
+            const ceURL = `http://localhost:5000/records/ce/${index || symbol}/${value}`
+            const peURL = `http://localhost:5000/records/pe/${index || symbol}/${value}`
             const responseCE = await fetch(ceURL);
             const responsePE = await fetch(peURL);
             if (!responseCE.ok || !responsePE.ok) {
@@ -203,10 +195,9 @@ const Page = () => {
             console.error(`Error fetching Records: ${error}`);
         }
     };
-
     const handleExpirydate = async (event) => {
         const eventValue = event.target.value;
-        const apiURL = `/marketfeed/option-chain/all/${index || symbol}/${eventValue}`;
+        const apiURL = `http://localhost:5000/option-chain/all/${index || symbol}/${eventValue}`;
         setselectedExpiryDate([eventValue]);
         setLoading(true);
 
@@ -231,13 +222,11 @@ const Page = () => {
             clearSelectedStrikeStates();
         }
     };
-
     const handleTimeDurationChange = (event) => {
         const selectedTime = event.target.value;
         // console.log(selectedTime);
         setTimeUpdateDuration(parseInt(selectedTime));
     };
-
     function clearAllStates() {
         setStockDataCE([]);
         setStockDataPE([]);
@@ -246,13 +235,11 @@ const Page = () => {
         setRecordStockDataCE([]);
         setRecordStockDataPE([]);
     };
-
     function clearSelectedStrikeStates() {
         setRecordStockDataCE([]);
         setRecordStockDataPE([]);
         setSelectedStrikePrice('');
     };
-
     function convertEpochToIndiaTime(epochTimestamp) {
         const epochMillis = epochTimestamp * 1000;
         const date = new Date(epochMillis);
@@ -266,7 +253,6 @@ const Page = () => {
 
         return indiaTime;
     };
-
     function formatEpochTimeToIST(epochTime) {
         const date = new Date(epochTime * 1000);
         const options = { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'long', year: 'numeric' };
@@ -276,7 +262,6 @@ const Page = () => {
 
         return istDateString;
     };
-
     const getSymbol = () => {
         const symbols = [];
         for (let i = 0; i < spotLTP.length - 1; i++) {
@@ -354,176 +339,177 @@ const Page = () => {
         const intervalId = setInterval(fetchData, timeUpdateDuration);
 
         return () => clearInterval(intervalId);
-    }, [index, symbol, timeUpdateDuration]);
+    }, [index, symbol, 60000]);
 
 
     return (
         <>
             <Navbar />
-            <div className='flex flex-col min-h-screen'>
-                <main className="container mx-auto mt-7 grow">
-                    <div className="flex justify-between mb-5 ">
-                        <div>
-                            <h4 className="text-gray-700 text-lg font-semibold">Option Chain (Equity Derivatives):</h4>
-                        </div>
-                        <div className="flex space-x-4">
-                            <div>
-                                <label className="text-gray-700" htmlFor="indexDropdown">
-                                    Select Index:
-                                </label>
-                                <select style={{ width: '153px' }} id="indexDropdown" className="border rounded p-2 "
-                                    value={index} onChange={handleIndexChange}>
-                                    <option value="" disabled>--Select--</option>
-                                    <option value="nifty">NIFTY</option>
-                                    <option value="finnifty">FINNIFTY</option>
-                                    <option value="banknifty">BANKNIFTY</option>
-                                    <option value="midcpnifty">MIDCPNIFTY</option>
-                                    <option value="sensex">SENSEX</option>
-                                    <option value="bankex">BANKEX</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="text-gray-700" htmlFor="symbolDropdown">
-                                    Select Symbol:
-                                </label>
-                                <select style={{ width: '153px' }} id="symbolDropdown" className="border rounded p-2"
-                                    value={symbol} onChange={handleSymbolChange}>
-                                    <option value="" disabled>--Select--</option>
-                                    <option value="reliance">RELIANCE</option>
-                                    <option value="hdfcbank">HDFCBANK</option>
-                                    <option value="bajfinance">BAJAJJ-FINANCE</option>
-                                    <option value="sbin">SBI</option>
-                                    <option value="axisbank">AXISBANK</option>
-                                    <option value="icicibank">ICICIBANK</option>
-                                    <option value="infy">INFY</option>
-                                    <option value="tcs">TCS</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="text-gray-700" htmlFor="expiryDropdown">Expiry Date:</label>
-                                <select style={{ width: "153px" }} id="expiryDropdown" className="border rounded p-2" value={selectedExpiryDate} onChange={handleExpirydate}>
-                                    <option value="" disabled>--Select--</option>
-                                    {expiryDates && expiryDates.length > 0 ? (
-                                        expiryDates.map((value, index) => (
-                                            <option key={index} value={value}>
-                                                {value}
-                                            </option>
-                                        ))
-                                    ) : (
-                                        <option value="" disabled>Loading...</option>
-                                    )}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="text-gray-700" htmlFor="strikeDropdown">
-                                    Select Strike Price:
-                                </label>
-                                <select style={{ width: '153px' }} id="strikeDropdown" className="border rounded p-2"
-                                    value={selectedStrikePrice} onChange={handleStrikeChange}>
-                                    <option value="">--Reset--</option>
-                                    {Array.isArray(strikePrices) && strikePrices.length > 0 ? (
-                                        strikePrices.map(strike => (
-                                            <option key={strike} value={strike}>
-                                                {strike}
-                                            </option>
-                                        ))
-                                    ) : (
-                                        <option value="" disabled>Loading...</option>
-                                    )}
-                                </select>
-                            </div>
+<div className='flex flex-col min-h-screen'>
+<main className="container mx-auto mt-7 grow">
+<div className="flex justify-between mb-5 ">
+    <div>
+        <h4 className="text-gray-700 text-lg font-semibold">Option Chain (Equity Derivatives):</h4>
+    </div>
+    <div className="flex space-x-4">
+        <div>
+            <label className="text-gray-700" htmlFor="indexDropdown">
+                Select Index:
+            </label>
+            <select style={{ width: '153px' }} id="indexDropdown" className="border rounded p-2 "
+                value={index} onChange={handleIndexChange}>
+                <option value="" disabled>--Select--</option>
+                <option value="nifty">NIFTY</option>
+                <option value="finnifty">FINNIFTY</option>
+                <option value="banknifty">BANKNIFTY</option>
+                <option value="midcpnifty">MIDCPNIFTY</option>
+                <option value="sensex">SENSEX</option>
+                <option value="bankex">BANKEX</option>
+            </select>
+        </div>
+        <div>
+            <label className="text-gray-700" htmlFor="symbolDropdown">
+                Select Symbol:
+            </label>
+            <select style={{ width: '153px' }} id="symbolDropdown" className="border rounded p-2"
+                value={symbol} onChange={handleSymbolChange}>
+                <option value="" disabled>--Select--</option>
+                <option value="reliance">RELIANCE</option>
+                <option value="hdfcbank">HDFCBANK</option>
+                <option value="bajfinance">BAJAJJ-FINANCE</option>
+                <option value="sbin">SBI</option>
+                <option value="axisbank">AXISBANK</option>
+                <option value="icicibank">ICICIBANK</option>
+                <option value="infy">INFY</option>
+                <option value="tcs">TCS</option>
+            </select>
+        </div>
+        <div>
+            <label className="text-gray-700" htmlFor="expiryDropdown">Expiry Date:</label>
+            <select style={{ width: "153px" }} id="expiryDropdown" className="border rounded p-2" value={selectedExpiryDate} onChange={handleExpirydate}>
+                <option value="" disabled>--Select--</option>
+                {expiryDates && expiryDates.length > 0 ? (
+                    expiryDates.map((value, index) => (
+                        <option key={index} value={value}>
+                            {value}
+                        </option>
+                    ))
+                ) : (
+                    <option value="" disabled>Loading...</option>
+                )}
+            </select>
+        </div>
+        <div>
+            <label className="text-gray-700" htmlFor="strikeDropdown">
+                Select Strike Price:
+            </label>
+            <select style={{ width: '153px' }} id="strikeDropdown" className="border rounded p-2"
+                value={selectedStrikePrice} onChange={handleStrikeChange}>
+                <option value="">--Reset--</option>
+                {Array.isArray(strikePrices) && strikePrices.length > 0 ? (
+                    strikePrices.map(strike => (
+                        <option key={strike} value={strike}>
+                            {strike}
+                        </option>
+                    ))
+                ) : (
+                    <option value="" disabled>Loading...</option>
+                )}
+            </select>
+        </div>
 
-                            <div>
-                                <label className="text-gray-700" htmlFor="timeDropdown">
-                                    Time Duration:
-                                </label>
-                                <select style={{ width: "153px" }} id="timeDropdown" className="border rounded p-2"
-                                    value={timeUpdateDuration.toString()} onChange={handleTimeDurationChange}>
-                                    <option value="60000">1 Minute</option>
-                                    <option value="120000">2 Minute</option>
-                                    <option value="180000">3 Minute</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+        <div>
+            <label className="text-gray-700" htmlFor="timeDropdown">
+                Time Duration:
+            </label>
+            <select style={{ width: "153px" }} id="timeDropdown" className="border rounded p-2"
+                value={timeUpdateDuration.toString()} onChange={handleTimeDurationChange}>
+                <option value="60000">1 Minute</option>
+                <option value="120000">2 Minute</option>
+                <option value="180000">3 Minute</option>
+            </select>
+        </div>
+    </div>
+</div>
 
-                    <div className="flex justify-between">
-                        <div className="container w-full flex items-start justify-start h-5 m-2">
-                            <h2 className="text-base text-gray-600 inline-block font-bold mb-2">
-                                {spotLTP.length > 0 && formatEpochTimeToIST(spotLTP[0][0])}
-                            </h2>
-                        </div>
-                        <div className="container w-full flex items-start justify-end h-5 m-2">
-                            {loading && <Loading />}
-                        </div>
-                    </div>
+<div className="flex justify-between">
+    <div className="container w-full flex items-start justify-start h-5 m-2">
+        <h2 className="text-base text-gray-600 inline-block font-bold mb-2">
+            {spotLTP.length > 0 && formatEpochTimeToIST(spotLTP[0][0])}
+        </h2>
+    </div>
+    <div className="container w-full flex items-start justify-end h-5 m-2">
+        {loading && <Loading />}
+    </div>
+</div>
 
-                    <div className="flex justify-end">
-                        <div className='mb-3'>
-                            <label className="text-gray-700" htmlFor="datePicker">
-                                Choose a Date:
-                            </label>
-                            <input
-                                type="date"
-                                id="datePicker"
-                                className="border border-gray-400 rounded p-1 ml-2 text-sm"
-                                onChange={handleDateChange}
-                            />
-                        </div>
-                    </div>
+<div className="flex justify-end">
+    <div className='mb-3'>
+        <label className="text-gray-700" htmlFor="datePicker">
+            Choose a Date:
+        </label>
+        <input
+            type="date"
+            id="datePicker"
+            className="border border-gray-400 rounded p-1 ml-2 text-sm"
+            onChange={handleDateChange}
+        />
+    </div>
+</div>
 
-                    <div className="overflow-x-auto">
-                        <div className="table-container">
-                            <div className="max-h-96 overflow-y-auto">
-                                <table className="table-auto w-full border bg-white shadow-md rounded-md">
-                                    <thead className="bg-gray-800 text-white sticky top-0 z-50">
-                                        <tr>
-                                            <th className="px-4 py-2 text-center border">Time</th>
-                                            <th className="px-4 py-2 text-center border">Spot/LTP</th>
-                                            <th className="px-4 py-2 text-center border">Future Price</th>
-                                            <th className="px-4 py-2 text-center border">Disc/Premium</th>
-                                            <th className="px-4 py-2 text-center border">Strike</th>
-                                            <th className="px-4 py-2 text-center border">CE/LTP</th>
-                                            <th className="px-4 py-2 text-center border">PE/LTP</th>
-                                            {(recordStockDataCE || recordStockDataPE).length != 0 && <th className="px-4 py-2 text-center border">Symbols</th>}
-                                        </tr>
-                                    </thead>
-                                    <tbody className="max-h-80 overflow-y-scroll">
-                                        {spotLTP.map((value, index) => (
-                                            <tr key={index}>
-                                                <td className="px-4 py-2 text-center border">{convertEpochToIndiaTime(value[0])}</td>
-                                                <td className="px-4 py-2 text-center border">{value[4]}</td>
-                                                <td className="px-4 py-2 text-center border">{futureLtpDataRecord.length > 0 ? (futureLtpDataRecord[index]?.[4]) : 'Loading...'}</td>
-                                                <td className="px-4 py-2 text-center border">{futuresData.length > 0 ? (futuresData[0].v.lp - value[4]).toFixed(2) : 'Loading...'}</td>
-                                                {selectedStrikePrice === '' && <td className="px-4 py-2 text-center border">{Array.isArray(strikePrices) && strikePrices.length > 0 ? strikePrices[index] : 'Loading...'}</td>}
-                                                <td className="px-4 py-2 text-center border">{recordStockDataCE.length == 0 ? stockDataCE[index]?.v.lp : (recordStockDataCE[index]?.[4])}</td>
-                                                <td className="px-4 py-2 text-center border">{recordStockDataPE.length == 0 ? stockDataPE[index]?.v.lp : (recordStockDataPE[index]?.[4])}</td>
-                                                {(recordStockDataCE || recordStockDataPE).length != 0 && <td className="px-4 py-2 text-center border">{comparisionSymbolMandT[index]}</td>}
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+<div className="overflow-x-auto">
+    <div className="table-container">
+        <div className="max-h-96 overflow-y-auto">
+            <table className="table-auto w-full border bg-white shadow-md rounded-md">
+                <thead className="bg-gray-800 text-white sticky top-0 z-50">
+                    <tr>
+                        <th className="px-4 py-2 text-center border">Time</th>
+                        <th className="px-4 py-2 text-center border">Spot/LTP</th>
+                        <th className="px-4 py-2 text-center border">Future Price</th>
+                        <th className="px-4 py-2 text-center border">Disc/Premium</th>
+                        <th className="px-4 py-2 text-center border">Strike</th>
+                        <th className="px-4 py-2 text-center border">CE/LTP</th>
+                        <th className="px-4 py-2 text-center border">PE/LTP</th>
+                        {(recordStockDataCE || recordStockDataPE).length != 0 && <th className="px-4 py-2 text-center border">Symbols</th>}
+                    </tr>
+                </thead>
+                <tbody className="max-h-80 overflow-y-scroll">
+                    {spotLTP.map((value, index) => (
+                        <tr key={index}>
+                            <td className="px-4 py-2 text-center border">{convertEpochToIndiaTime(value[0])}</td>
+                            <td className="px-4 py-2 text-center border">{value[4]}</td>
+                            {/* <td className="px-4 py-2 text-center border">{futureLtpDataRecord.length > 0 ? (futureLtpDataRecord[index]?.[4]) : 'Loading...'}</td> */}
+                            <td className="px-4 py-2 text-center border">{futuresData.length > 0 ? futuresData[index]?.v.lp : 'Loading...'}</td>
+                            <td className="px-4 py-2 text-center border">{futuresData.length > 0 ? (futuresData[0].v.lp - value[4]).toFixed(2) : 'Loading...'}</td>
+                            {selectedStrikePrice === '' && <td className="px-4 py-2 text-center border">{Array.isArray(strikePrices) && strikePrices.length > 0 ? strikePrices[index] : 'Loading...'}</td>}
+                            <td className="px-4 py-2 text-center border">{recordStockDataCE.length == 0 ? stockDataCE[index]?.v.lp : (recordStockDataCE[index]?.[4])}</td>
+                            <td className="px-4 py-2 text-center border">{recordStockDataPE.length == 0 ? stockDataPE[index]?.v.lp : (recordStockDataPE[index]?.[4])}</td>
+                            {(recordStockDataCE || recordStockDataPE).length != 0 && <td className="px-4 py-2 text-center border">{comparisionSymbolMandT[index]}</td>}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
-                </main>
-                <footer className="text-black mt-20">
-                    <section className="bg-gray-100 py-16">
-                        <div className="container mx-auto text-center">
-                            <h2 className="text-3xl font-bold mb-4">Analyze Historical Data</h2>
-                            <p className="text-lg mb-6">Explore a chronological record of your interactions and discoveries.
-                                Revisit and analyze your past views to gain insights and make informed decisions.</p>
-                            <Link href="/history">
-                                <Purplebutton data="View History" />
-                            </Link>
-                            <Link href="/">
-                                <Purplebutton data="Go To Home" />
-                            </Link>
-                        </div>
-                    </section>
-                </footer>
-            </div>
+</main>
+<footer className="text-black mt-20">
+<section className="bg-gray-100 py-16">
+    <div className="container mx-auto text-center">
+        <h2 className="text-3xl font-bold mb-4">Analyze Historical Data</h2>
+        <p className="text-lg mb-6">Explore a chronological record of your interactions and discoveries.
+            Revisit and analyze your past views to gain insights and make informed decisions.</p>
+        <Link href="/history">
+            <Purplebutton data="View History" />
+        </Link>
+        <Link href="/">
+            <Purplebutton data="Go To Home" />
+        </Link>
+    </div>
+</section>
+</footer>
+</div>
         </>
     );
 };

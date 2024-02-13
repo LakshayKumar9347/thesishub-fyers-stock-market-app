@@ -135,104 +135,108 @@ router.get('/status', (req, res) => {
         console.log(error)
     })
 })
-router.get('/futures/:symbol', async (req, res) => {
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth();
-    const currentYear = currentDate.getFullYear();
 
-    function getLastThursday(year, month) {
-        const lastDayOfMonth = new Date(year, month + 1, 0);
-        const dayOfWeek = lastDayOfMonth.getDay();
-        const diff = (dayOfWeek + 6) % 7; // Calculate the difference to Thursday
-        return new Date(lastDayOfMonth - diff * 24 * 60 * 60 * 1000);
-    }
+// router.get('/futures/:symbol', async (req, res) => {
+//     console.log("/Futures is hiting");
+//     const symbol = req.params.symbol.toLowerCase();
+//     const date = new Date();
+//     const formattedDate = formatDate(date); // Assuming formatDate function is defined elsewhere
+//     try {
+//         const response = await axios.get(`http://localhost:5000/api/v3/futures/${symbol}`);
+//         const index = response.data.d[0].n;
+//         var inp = {
+//             "symbol": index,
+//             "resolution": "1",
+//             "date_format": "1",
+//             "range_from": formattedDate,
+//             "range_to": formattedDate,
+//             "cont_flag": "1"
+//         }
+//         fyers.getHistory(inp).then((response) => {
+//             // console.log(response)
+//             res.send(response)
+//         }).catch((err) => {
+//             console.log("Future Ltp Reaced Its limit")
+//         })
+//     } catch (error) {
+//         console.error("Error occurred:", error);
+//         res.status(500).send("Internal Server Error");
+//     }
+// });
 
-    // Get the last Thursday of the current month
-    const lastThursday = getLastThursday(currentYear, currentMonth);
+// !dont Remove The below code its important
+// router.get('/futures/:symbol', async (req, res) => {
+//     const currentDate = new Date();
+//     const currentMonth = currentDate.getMonth();
+//     const currentYear = currentDate.getFullYear();
 
-    const short_Year = currentDate.toLocaleDateString('en-US', { year: '2-digit' }).slice(-2);
+//     function getLastThursday(year, month) {
+//         const lastDayOfMonth = new Date(year, month + 1, 0);
+//         const dayOfWeek = lastDayOfMonth.getDay();
+//         const diff = (dayOfWeek + 6) % 7; // Calculate the difference to Thursday
+//         return new Date(lastDayOfMonth - diff * 24 * 60 * 60 * 1000);
+//     }
 
-    const futureSymbolsPattern = {
-        'nifty': `NSE:NIFTY${short_Year}`,
-        'banknifty': `NSE:BANKNIFTY${short_Year}`,
-        'sensex': `BSE:SENSEX${short_Year}`,
-        'finnifty': `NSE:FINNIFTY${short_Year}`,
-        'midcpnifty': `NSE:MIDCPNIFTY${short_Year}`,
-        'bankex': `BSE:BANKEX${short_Year}`,
-        'reliance': `NSE:RELIANCE${short_Year}`,
-        'bajfinance': `NSE:BAJFINANCE${short_Year}`,
-        'hdfcbank': `NSE:HDFCBANK${short_Year}`,
-        'sbin': `NSE:SBIN${short_Year}`,
-        'axisbank': `NSE:AXISBANK${short_Year}`,
-        'icicibank': `NSE:ICICIBANK${short_Year}`,
-        'infy': `NSE:INFY${short_Year}`,
-        'tcs': `NSE:TCS${short_Year}`,
-    };
+//     // Get the last Thursday of the current month
+//     const lastThursday = getLastThursday(currentYear, currentMonth);
 
-    const userFriendlySymbol = req.params.symbol.toLowerCase();
-    const baseSymbolPattern = futureSymbolsPattern[userFriendlySymbol];
+//     const short_Year = currentDate.toLocaleDateString('en-US', { year: '2-digit' }).slice(-2);
 
-    if (!baseSymbolPattern) {
-        return res.status(400).json({ error: 'Invalid user-friendly symbol' });
-    }
+//     const futureSymbolsPattern = {
+//         'nifty': `NSE:NIFTY${short_Year}`,
+//         'banknifty': `NSE:BANKNIFTY${short_Year}`,
+//         'sensex': `BSE:SENSEX${short_Year}`,
+//         'finnifty': `NSE:FINNIFTY${short_Year}`,
+//         'midcpnifty': `NSE:MIDCPNIFTY${short_Year}`,
+//         'bankex': `BSE:BANKEX${short_Year}`,
+//         'reliance': `NSE:RELIANCE${short_Year}`,
+//         'bajfinance': `NSE:BAJFINANCE${short_Year}`,
+//         'hdfcbank': `NSE:HDFCBANK${short_Year}`,
+//         'sbin': `NSE:SBIN${short_Year}`,
+//         'axisbank': `NSE:AXISBANK${short_Year}`,
+//         'icicibank': `NSE:ICICIBANK${short_Year}`,
+//         'infy': `NSE:INFY${short_Year}`,
+//         'tcs': `NSE:TCS${short_Year}`,
+//     };
 
-    let currentMonthSymbol, nextMonthSymbol, monthAfterNextSymbol;
+//     const userFriendlySymbol = req.params.symbol.toLowerCase();
+//     const baseSymbolPattern = futureSymbolsPattern[userFriendlySymbol];
 
-    if (currentDate.getDate() <= lastThursday.getDate()) {
-        // If the current date is on or before the last Thursday of the month
-        const short_Month = new Date().toLocaleString('default', { month: 'short' }).toUpperCase();
-        currentMonthSymbol = `${baseSymbolPattern}${short_Month}FUT`;
-        const nextMonth = new Date(currentYear, currentMonth + 1, 1);
-        nextMonthSymbol = `${baseSymbolPattern}${new Date(nextMonth).toLocaleString('default', { month: 'short' }).toUpperCase()}FUT`;
-        const monthAfterNext = new Date(currentYear, currentMonth + 2, 1);
-        monthAfterNextSymbol = `${baseSymbolPattern}${new Date(monthAfterNext).toLocaleString('default', { month: 'short' }).toUpperCase()}FUT`;
-    } else {
-        // If the current date is after the last Thursday of the month
-        const nextMonth = new Date(currentYear, currentMonth + 1, 1);
-        currentMonthSymbol = `${baseSymbolPattern}${new Date(nextMonth).toLocaleString('default', { month: 'short' }).toUpperCase()}FUT`;
-        const monthAfterNext = new Date(currentYear, currentMonth + 2, 1);
-        nextMonthSymbol = `${baseSymbolPattern}${new Date(monthAfterNext).toLocaleString('default', { month: 'short' }).toUpperCase()}FUT`;
-        const twoMonthsAfterNext = new Date(currentYear, currentMonth + 3, 1);
-        monthAfterNextSymbol = `${baseSymbolPattern}${new Date(twoMonthsAfterNext).toLocaleString('default', { month: 'short' }).toUpperCase()}FUT`;
-    }
+//     if (!baseSymbolPattern) {
+//         return res.status(400).json({ error: 'Invalid user-friendly symbol' });
+//     }
 
-    const threeFutureSymbols = [currentMonthSymbol, nextMonthSymbol, monthAfterNextSymbol];
+//     let currentMonthSymbol, nextMonthSymbol, monthAfterNextSymbol;
 
-    try {
-        // Assuming fyers.getQuotes function is asynchronous and returns a promise
-        const response = await fyers.getQuotes(threeFutureSymbols);
-        res.send(response);
-    } catch (error) {
-        handleFyersError(res, error);
-    }
-});
+//     if (currentDate.getDate() <= lastThursday.getDate()) {
+//         // If the current date is on or before the last Thursday of the month
+//         const short_Month = new Date().toLocaleString('default', { month: 'short' }).toUpperCase();
+//         currentMonthSymbol = `${baseSymbolPattern}${short_Month}FUT`;
+//         const nextMonth = new Date(currentYear, currentMonth + 1, 1);
+//         nextMonthSymbol = `${baseSymbolPattern}${new Date(nextMonth).toLocaleString('default', { month: 'short' }).toUpperCase()}FUT`;
+//         const monthAfterNext = new Date(currentYear, currentMonth + 2, 1);
+//         monthAfterNextSymbol = `${baseSymbolPattern}${new Date(monthAfterNext).toLocaleString('default', { month: 'short' }).toUpperCase()}FUT`;
+//     } else {
+//         // If the current date is after the last Thursday of the month
+//         const nextMonth = new Date(currentYear, currentMonth + 1, 1);
+//         currentMonthSymbol = `${baseSymbolPattern}${new Date(nextMonth).toLocaleString('default', { month: 'short' }).toUpperCase()}FUT`;
+//         const monthAfterNext = new Date(currentYear, currentMonth + 2, 1);
+//         nextMonthSymbol = `${baseSymbolPattern}${new Date(monthAfterNext).toLocaleString('default', { month: 'short' }).toUpperCase()}FUT`;
+//         const twoMonthsAfterNext = new Date(currentYear, currentMonth + 3, 1);
+//         monthAfterNextSymbol = `${baseSymbolPattern}${new Date(twoMonthsAfterNext).toLocaleString('default', { month: 'short' }).toUpperCase()}FUT`;
+//     }
 
-router.get('/future-ltp/:symbol', async (req, res) => {
-    const symbol = req.params.symbol.toLowerCase();
-    const date = new Date();
-    const formattedDate = formatDate(date); // Assuming formatDate function is defined elsewhere
-    try {
-        const response = await axios.get(`http://localhost:5000/api/v3/futures/${symbol}`);
-        const index = response.data.d[0].n;
-        var inp = {
-            "symbol": index,
-            "resolution": "1",
-            "date_format": "1",
-            "range_from": formattedDate,
-            "range_to": formattedDate,
-            "cont_flag": "1"
-        }
-        fyers.getHistory(inp).then((response) => {
-            // console.log(response)
-            res.send(response)
-        }).catch((err) => {
-            console.log("Future Ltp Reaced Its limit")
-        })
-    } catch (error) {
-        console.error("Error occurred:", error);
-        res.status(500).send("Internal Server Error");
-    }
-});
+//     const threeFutureSymbols = [currentMonthSymbol, nextMonthSymbol, monthAfterNextSymbol];
+
+//     try {
+//         // Assuming fyers.getQuotes function is asynchronous and returns a promise
+//         const response = await fyers.getQuotes(threeFutureSymbols);
+//         res.send(response);
+//     } catch (error) {
+//         handleFyersError(res, error);
+//     }
+// });
+
 
 function formatDate(date) {
     const year = date.getFullYear();

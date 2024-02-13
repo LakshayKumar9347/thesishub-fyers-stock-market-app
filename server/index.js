@@ -13,9 +13,11 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 const port = 5000;
+// Using Cors
 app.use(cors({
     origin: "http://localhost:3000"
 }));
+
 // Establishing Database Connection
 connectDB();
 
@@ -64,9 +66,9 @@ async function createFyersSocket() {
 }
 const fyersdata = createFyersSocket()
 
-// Server Routes
-app.use('/api/v3', require('./routes/index'));
-app.use('/db', require('./routes/db-routes'));
+// Main Api Routes
+app.use('/api/v3', require('./routes/index')); // Give Status,Ticker,Futures,Future-LTP
+app.use('/db', require('./routes/db-routes')); // This is For Historical Stock data Page 
 app.use('/records', require('./routes/records'));
 app.use('/option-chain', require('./routes/option-routes'));
 app.get('/', (req, res) => {
@@ -157,5 +159,5 @@ io.off('connection', (socket) => {
 
 // Server Up & Running
 server.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+    console.log(`Successfully running on port ${port}`);
 });

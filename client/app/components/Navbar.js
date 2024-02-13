@@ -7,7 +7,7 @@ const Navbar = () => {
     const [price, setprice] = useState('')
     const fetchPrice = async () => {
         try {
-            const response = await fetch(`/marketfeed/api/v3/ticker/nifty`);
+            const response = await fetch(`http://localhost:5000/api/v3/ticker/nifty`);
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
