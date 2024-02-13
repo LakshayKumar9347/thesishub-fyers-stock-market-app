@@ -29,7 +29,11 @@ const Page = () => {
     const fetchRealTimeData = async () => {
         try {
             setLoading(true);
+<<<<<<< HEAD
             const response = await fetch(`http://localhost:5000/option-chain/all/${index || symbol}`);
+=======
+            const response = await fetch(`/marketfeed/option-chain/all/${index || symbol}`);
+>>>>>>> f44671b (Committing changes before pulling)
 
             if (!response.ok) {
                 throw new Error(`Failed to fetch data. HTTP error! Status: ${response.status}`);
@@ -60,7 +64,11 @@ const Page = () => {
     const fetchStrikePrices = async () => {
         try {
             setLoading(true);
+<<<<<<< HEAD
             const response = await fetch(`http://localhost:5000/option-chain/strikes/${index || symbol}`);
+=======
+            const response = await fetch(`/marketfeed/option-chain/strikes/${index || symbol}`);
+>>>>>>> f44671b (Committing changes before pulling)
             const parsedData = await response.json();
             const strikePrices = parsedData;
             setStrikePrices(strikePrices);
@@ -75,7 +83,11 @@ const Page = () => {
     const fetchExpirydates = async () => {
         try {
             setLoading(true);
+<<<<<<< HEAD
             const response = await fetch(`http://localhost:5000/option-chain/expiry/${index || symbol}`);
+=======
+            const response = await fetch(`/marketfeed/option-chain/expiry/${index || symbol}`);
+>>>>>>> f44671b (Committing changes before pulling)
             const parsedData = await response.json();
             const expirydates = parsedData;
             setexpiryDates(expirydates[0])
@@ -88,7 +100,11 @@ const Page = () => {
     };
 
     const fetchSpotLTP = async () => {
+<<<<<<< HEAD
         const apiUrl = `http://localhost:5000/records/index/${index || symbol}`;
+=======
+        const apiUrl = `/marketfeed/records/index/${index || symbol}`;
+>>>>>>> f44671b (Committing changes before pulling)
         try {
             const response = await fetch(apiUrl);
             if (!response.ok) {
@@ -124,7 +140,11 @@ const Page = () => {
 
     const fetchFuturesData = async () => {
         try {
+<<<<<<< HEAD
             const apiUrl = `http://localhost:5000/api/v3/futures/${index || symbol}`;
+=======
+            const apiUrl = `/marketfeed/api/v3/futures/${index || symbol}`;
+>>>>>>> f44671b (Committing changes before pulling)
             const response = await fetch(apiUrl);
             if (!response.ok) {
                 throw new Error(`Error fetching futures data for ${index || symbol}`);
@@ -158,6 +178,28 @@ const Page = () => {
         setSymbol(newSymbol);
     };
 
+<<<<<<< HEAD
+=======
+    // const handleStrikeChange = async (event) => {
+    //     const eventValue = event.target.value;
+    //     setSelectedStrikePrice([eventValue]);
+    //     if (eventValue === '') {
+    //         clearSelectedStrikeStates();
+    //     } else {
+    //         try {
+    //             const responseCE = await fetch(`/marketfeed/records/ce/${index || symbol}/${eventValue}`);
+    //             const responsePE = await fetch(`/marketfeed/records/pe/${index || symbol}/${eventValue}`);
+    //             const parsedDataCE = await responseCE.json();
+    //             const parsedDataPE = await responsePE.json();
+    //             setRecordStockDataCE(parsedDataCE.candles);
+    //             setRecordStockDataPE(parsedDataPE.candles);
+    //             getSymbol();
+    //         } catch (error) {
+    //             console.error(`Error fetching Records ${error.message}`);
+    //         }
+    //     }
+    // };
+>>>>>>> f44671b (Committing changes before pulling)
     const handleStrikeChange = async (event) => {
         const eventValue = event.target.value;
         setselectedStrikeValueString(eventValue);
@@ -167,9 +209,30 @@ const Page = () => {
             clearSelectedStrikeStates();
         } else {
             try {
+<<<<<<< HEAD
                 await fetchRecordStockData(eventValue);
             } catch (error) {
                 console.error(`Error fetching Record Stock Data: ${error}`);
+=======
+                const responseCE = await fetch(`/marketfeed/records/ce/${index || symbol}/${eventValue}`);
+                const responsePE = await fetch(`/marketfeed/records/pe/${index || symbol}/${eventValue}`);
+                const parsedDataCE = await responseCE.json();
+                const parsedDataPE = await responsePE.json();
+
+                if (parsedDataCE && parsedDataCE.candles && Array.isArray(parsedDataCE.candles)) {
+                    setRecordStockDataCE(parsedDataCE.candles);
+                } else {
+                    console.error('Error: CE data is missing or invalid');
+                }
+
+                if (parsedDataPE && parsedDataPE.candles && Array.isArray(parsedDataPE.candles)) {
+                    setRecordStockDataPE(parsedDataPE.candles);
+                } else {
+                    console.error('Error: PE data is missing or invalid');
+                }
+            } catch (error) {
+                console.error(`Error fetching Records`,error);
+>>>>>>> f44671b (Committing changes before pulling)
             }
         }
     };
@@ -204,7 +267,11 @@ const Page = () => {
 
     const handleExpirydate = async (event) => {
         const eventValue = event.target.value;
+<<<<<<< HEAD
         const apiURL = `http://localhost:5000/option-chain/all/${index || symbol}/${eventValue}`;
+=======
+        const apiURL = `/marketfeed/option-chain/all/${index || symbol}/${eventValue}`;
+>>>>>>> f44671b (Committing changes before pulling)
         setselectedExpiryDate([eventValue]);
         setLoading(true);
 
@@ -308,13 +375,13 @@ const Page = () => {
                 symbols.push("T");
             } else if (
                 spotLTP_first_value > spotLTP_second_value &&
-                PE_first_value > PE_second_value
+                PE_first_value < PE_second_value
             ) {
-                symbols.push("T");// --
+                symbols.push("T");
             } else if (
                 spotLTP_first_value > spotLTP_second_value &&
                 CE_first_value < CE_second_value &&
-                PE_first_value > PE_second_value
+                PE_first_value < PE_second_value
             ) {
                 symbols.push("T2");
             } else {
@@ -473,7 +540,7 @@ const Page = () => {
                                             <th className="px-4 py-2 text-center border">Spot/LTP</th>
                                             <th className="px-4 py-2 text-center border">Future Price</th>
                                             <th className="px-4 py-2 text-center border">Disc/Premium</th>
-                                            {selectedStrikePrice === '' && <th className="px-4 py-2 text-center border">Strike</th>}
+                                            <th className="px-4 py-2 text-center border">Strike</th>
                                             <th className="px-4 py-2 text-center border">CE/LTP</th>
                                             <th className="px-4 py-2 text-center border">PE/LTP</th>
                                             {(recordStockDataCE || recordStockDataPE).length != 0 && <th className="px-4 py-2 text-center border">Symbols</th>}
@@ -484,11 +551,19 @@ const Page = () => {
                                             <tr key={index}>
                                                 <td className="px-4 py-2 text-center border">{convertEpochToIndiaTime(value[0])}</td>
                                                 <td className="px-4 py-2 text-center border">{value[4]}</td>
+<<<<<<< HEAD
                                                 <td className="px-4 py-2 text-center border">{futureLtpDataRecord.length > 0 ? (futureLtpDataRecord[index]?.[4]) : 'Loading...'}</td>
                                                 <td className="px-4 py-2 text-center border">{futuresData.length > 0 ? (futuresData[0].v.lp - value[4]).toFixed(2) : 'Loading...'}</td>
                                                 {selectedStrikePrice === '' && <td className="px-4 py-2 text-center border">{Array.isArray(strikePrices) && strikePrices.length > 0 ? strikePrices[index] : 'Loading...'}</td>}
                                                 <td className="px-4 py-2 text-center border">{recordStockDataCE.length == 0 ? stockDataCE[index]?.v.lp : (recordStockDataCE[index]?.[4])}</td>
                                                 <td className="px-4 py-2 text-center border">{recordStockDataPE.length == 0 ? stockDataPE[index]?.v.lp : (recordStockDataPE[index]?.[4])}</td>
+=======
+                                                <td className="px-4 py-2 text-center border">{futuresData.length > 0 ? futuresData[index]?.v.lp : 'Loading...'}</td>
+                                                <td className="px-4 py-2 text-center border">{futuresData.length > 0 ? (futuresData[0].v.lp - value[4]).toFixed(2) : 'Loading...'}</td>
+                                                <td className="px-4 py-2 text-center border">{Array.isArray(strikePrices) && strikePrices.length > 0 ? strikePrices[index] : 'Loading...'}</td>
+                                                <td className="px-4 py-2 text-center border">{recordStockDataCE.length === 0 ? stockDataCE[index]?.v.lp : (recordStockDataCE[index][4])}</td>
+                                                <td className="px-4 py-2 text-center border">{recordStockDataPE.length === 0 ? stockDataPE[index]?.v.lp : (recordStockDataPE[index][4])}</td>
+>>>>>>> f44671b (Committing changes before pulling)
                                                 {(recordStockDataCE || recordStockDataPE).length != 0 && <td className="px-4 py-2 text-center border">{comparisionSymbolMandT[index]}</td>}
                                             </tr>
                                         ))}
