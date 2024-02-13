@@ -1,14 +1,13 @@
 "use client"
-
 import Image from 'next/image'
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
 
 const Navbar = () => {
     const [price, setprice] = useState('')
-    const fetchPrice = async (symbol) => {
+    const fetchPrice = async () => {
         try {
-            const response = await fetch(`/marketfeed/api/v3/ticker/${symbol}`);
+            const response = await fetch(`/marketfeed/api/v3/ticker/nifty`);
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
@@ -19,7 +18,7 @@ const Navbar = () => {
         }
     }
     useEffect(() => {
-        fetchPrice('nifty');
+        fetchPrice();
     }, []);
     return (
         <header className="bg-gradient-to-r from-indigo-500 to-indigo-800 py-4">
@@ -33,7 +32,6 @@ const Navbar = () => {
                         width={150}
                         height={200}
                     />
-                    {/* <span className="text-white text-3xl  font-sans  font-bold tracking-wide ">National Stock Exchange</span> */}
                 </div>
                 <div className="flex items-center p-2">
                     <Image

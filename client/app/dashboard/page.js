@@ -167,7 +167,9 @@ const Page = () => {
             clearSelectedStrikeStates();
         } else {
             try {
+                console.log("we Have to fetch Ce && Pe Records data");
                 await fetchRecordStockData(eventValue);
+                getSymbol()
             } catch (error) {
                 console.error(`Error fetching Record Stock Data: ${error}`);
             }
@@ -331,22 +333,29 @@ const Page = () => {
         setComparisionSymbolMandT(symbols);
     };
     useEffect(() => {
-        const mainDataFunctions = async () => {
-            await fetchExpirydates();
-            await fetchStrikePrices();
-            await fetchSpotLTP();
-            await fetchRealTimeData();
-            // await fetchFuturesData();
-             await fetchFuturesLTP();  // reached its limit
-
-
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                await fetchExpirydates();
+                await fetchStrikePrices();
+                await fetchSpotLTP();
+                await fetchRealTimeData();
+                await fetchFuturesData();
+                await fetchFuturesLTP();  // reached its limit
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            } finally {
+                setLoading(false);
+            }
         };
 
-        mainDataFunctions();
-        const intervalId = setInterval(mainDataFunctions, 60000 );
+        fetchData();
+
+        const intervalId = setInterval(fetchData, timeUpdateDuration);
 
         return () => clearInterval(intervalId);
     }, [index, symbol, timeUpdateDuration]);
+
 
     return (
         <>

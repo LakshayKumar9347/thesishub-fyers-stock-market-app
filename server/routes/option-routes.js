@@ -156,10 +156,6 @@ function calculateRoundedLTP(ltp, symbol) {
     }
     return Math.round(ltp / gap) * gap;
 }
-<<<<<<< HEAD
-=======
-// Generate Strike Prices with Symbols
->>>>>>> f44671b (Committing changes before pulling)
 function generateStrikePrices(roundLTP, totalStrikePrices, symbol, date = '') {
     const strikePricesCE = [];
     const strikePricesPE = [];
@@ -174,7 +170,6 @@ function generateStrikePrices(roundLTP, totalStrikePrices, symbol, date = '') {
         const day = nextWeekday.getDate().toString().padStart(2, '0');
         return { month, day };
     }
-<<<<<<< HEAD
     function getLastWeekdayOfMonth(date, dayIndex) {
         const lastDayOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
         const lastDayOfWeek = lastDayOfMonth.getDay(); // Day of the week of the last day of the month
@@ -199,8 +194,6 @@ function generateStrikePrices(roundLTP, totalStrikePrices, symbol, date = '') {
             return "Invalid month";
         }
     }
-=======
->>>>>>> f44671b (Committing changes before pulling)
     const symbolConfig = {
         'nifty': 50,
         'finnifty': 50,
@@ -217,11 +210,11 @@ function generateStrikePrices(roundLTP, totalStrikePrices, symbol, date = '') {
         'axisbank': 10,
         'icicibank': 5
     };
-<<<<<<< HEAD
     const gap = symbolConfig[symbol]
 
     let currentDate;
     let day, month, year, alpaMonth;
+    
 
     if (date !== '' && symbol) {
         currentDate = new Date(date)
@@ -264,17 +257,6 @@ function generateStrikePrices(roundLTP, totalStrikePrices, symbol, date = '') {
             year = UserInputYear;
             month = UserInputMonth;
         }
-=======
-    const gap = symbolConfig[symbol];
-    const currentDate = new Date();
-    let day, month, alpaMonth, year;
-
-    if (date !== '') {
-        const [inputDay, inputMonth, inputYear] = date.split('-');
-        day = inputDay.padStart(2, '0');
-        month = (new Date(Date.parse(inputMonth + ' 1, 2000')).getMonth() + 1).toString().padStart(2, '0');
-        year = inputYear.slice(-2);
->>>>>>> f44671b (Committing changes before pulling)
     } else {
         currentDate = new Date()
         switch (symbol) {

@@ -62,6 +62,7 @@ router.get("/index/:symbol", async (req, res) => {
             })
             .catch((err) => {
                 console.log("Request Limit Exceeded in /Records/Index");
+                res.status(500).send("Api Limit React");
             });
     } catch (error) {
         console.error("Error occurred:");
@@ -83,7 +84,7 @@ router.get("/ce/:symbol/:strike", async (req, res) => {
     const apiURL = `${process.env.MAIN_URL}/option-chain/single-strike/${symbol}/${strike}`;
     const date = new Date();
     const dayOfWeek = date.getDay();
- 
+
     // If it's Saturday or Sunday, adjust the date to previous Friday
     if (dayOfWeek === 0) { // Sunday
         date.setDate(date.getDate() - 2);
@@ -110,6 +111,7 @@ router.get("/ce/:symbol/:strike", async (req, res) => {
             res.send(response)
         }).catch((err) => {
             console.log("Request Limit Exceeded in /Records/Ce")
+            res.status(500).send("Api Limit React");
         })
     } catch (error) {
         console.log("Error Fetching Single Option-Chain Data")
@@ -158,6 +160,7 @@ router.get("/pe/:symbol/:strike", async (req, res) => {
         })
     } catch (error) {
         console.log("Error Fetching Single Option-Chain Data", error)
+        res.status(500).send("Api Limit React");
     }
 })
 

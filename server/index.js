@@ -1,5 +1,5 @@
 const express = require('express');
-const http = require('http'); 
+const http = require('http');
 const socketIO = require('socket.io');
 const FyersSocket = require("fyers-api-v3").fyersDataSocket;
 const dotenv = require('dotenv');
