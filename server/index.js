@@ -64,7 +64,7 @@ async function createFyersSocket() {
         throw error;
     }
 }
-const fyersdata = createFyersSocket()
+// const fyersdata = createFyersSocket()
 
 // Main Api Routes
 app.use('/api/v3', require('./routes/index')); // Give Status,Ticker,Futures,Future-LTP
@@ -159,5 +159,5 @@ io.off('connection', (socket) => {
 
 // Server Up & Running
 server.listen(port, () => {
-    console.log(`Successfully running on port ${port}`);
+    console.log(`Server Live At Port ${port}.`);
 });
