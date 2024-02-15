@@ -50,18 +50,7 @@ async function refreshAccessToken() {
         throw error;
     }
 }
-<<<<<<< HEAD
- function restartServer() {
-     console.log('Restarting Express server...');
-     exec('pm2 reload 0', (error, stdout, stderr) => {
-         if (error) {
-             console.error(`Error restarting server: ${error}`);
-             return;
-        }
-         console.log(`Server restarted successfully: ${stdout}`);
-     });
->>>>>>> c800782 (Your commit message)
-=======
+
 function restartServer() {
     console.log('Restarting Express server...');
     exec('pm2 reload 0', (error, stdout, stderr) => {
@@ -71,7 +60,6 @@ function restartServer() {
         }
         console.log(`Server restarted successfully: ${stdout}`);
     });
->>>>>>> 7e31ff662212a054647968d1a13bf6dfae1167fd
 }
 async function createFyersSocket() {
     try {
