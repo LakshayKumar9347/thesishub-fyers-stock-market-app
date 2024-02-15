@@ -50,6 +50,7 @@ async function refreshAccessToken() {
         throw error;
     }
 }
+<<<<<<< HEAD
 function restartServer() {
     console.log('Restarting Express server...');
     exec('pm2 reload 0', (error, stdout, stderr) => {
@@ -59,6 +60,17 @@ function restartServer() {
         }
         console.log(`Server restarted successfully: ${stdout}`);
     });
+=======
+ function restartServer() {
+     console.log('Restarting Express server...');
+     exec('pm2 reload 0', (error, stdout, stderr) => {
+         if (error) {
+             console.error(`Error restarting server: ${error}`);
+             return;
+        }
+         console.log(`Server restarted successfully: ${stdout}`);
+     });
+>>>>>>> c800782 (Your commit message)
 }
 async function createFyersSocket() {
     try {
@@ -77,7 +89,11 @@ async function createFyersSocket() {
             fs.writeFileSync(envFilePath, updatedEnvContents);
 
             console.log("This is Your New Access Token \n", newAccessToken);
+<<<<<<< HEAD
             // Restart the Express server
+=======
+             // Restart the Express server
+>>>>>>> c800782 (Your commit message)
             restartServer();
         }
         const fyersdata = new FyersSocket(process.env.ACCESS_TOKEN);
