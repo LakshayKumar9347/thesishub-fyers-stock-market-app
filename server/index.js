@@ -51,6 +51,7 @@ async function refreshAccessToken() {
     }
 }
 
+<<<<<<< HEAD
 function restartServer() {
     console.log('Restarting Express server...');
     exec('pm2 reload 0', (error, stdout, stderr) => {
@@ -61,6 +62,18 @@ function restartServer() {
         console.log(`Server restarted successfully: ${stdout}`);
     });
 }
+=======
+ function restartServer() {
+     console.log('Restarting Express server...');
+     exec('pm2 reload 0', (error, stdout, stderr) => {
+         if (error) {
+             console.error(`Error restarting server: ${error}`);
+             return;
+        }
+         console.log(`Server restarted successfully: ${stdout}`);
+     });
+
+>>>>>>> 6be1016 (hh)
 async function createFyersSocket() {
     try {
         const decodedToken = jwt.decode(process.env.ACCESS_TOKEN);
