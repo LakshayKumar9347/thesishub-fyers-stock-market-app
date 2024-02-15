@@ -50,17 +50,6 @@ async function refreshAccessToken() {
         throw error;
     }
 }
-<<<<<<< HEAD
-function restartServer() {
-    console.log('Restarting Express server...');
-    exec('pm2 reload 0', (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Error restarting server: ${error}`);
-            return;
-        }
-        console.log(`Server restarted successfully: ${stdout}`);
-    });
-=======
  function restartServer() {
      console.log('Restarting Express server...');
      exec('pm2 reload 0', (error, stdout, stderr) => {
