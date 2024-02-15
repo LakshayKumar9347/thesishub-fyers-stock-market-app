@@ -16,7 +16,7 @@ const Page = () => {
     const fetchRealTimeData = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`https://thesishub.in/marketfeed/db/history/${index || symbol}`);
+            const response = await fetch(`/marketfeed/db/history/${index || symbol}`);
 
             if (!response.ok) {
                 throw new Error(`Failed to fetch data. HTTP error! Status: ${response.status}`);
