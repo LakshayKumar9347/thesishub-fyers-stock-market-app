@@ -9,7 +9,7 @@ import Loading from '../components/Loading';
 const Page = () => {
     // All the variable that we are using for storing the data in response
     const [loading, setLoading] = useState(true);
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    // const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [spotLTP, setSpotLTP] = useState([]);
     const [stockDataCE, setStockDataCE] = useState([]);
     const [stockDataPE, setStockDataPE] = useState([]);
@@ -52,9 +52,9 @@ const Page = () => {
             setLoading(false);
         }
     };
-    const handleDateChange = (e) => {
-        setSelectedDate(e.target.value);
-    };
+    // const handleDateChange = (e) => {
+    //     setSelectedDate(e.target.value);
+    // };
     const fetchStrikePrices = async () => {
         try {
             setLoading(true);
@@ -152,6 +152,10 @@ const Page = () => {
     const handleStrikeChange = async (event) => {
         const eventValue = event.target.value;
         setSelectedStrikePrice([eventValue]);
+        if (eventValue === '') {
+            setRecordStockDataCE([])
+            setRecordStockDataPE([])
+        }
     };
     const fetchRecordStockData = async (value) => {
         try {
@@ -172,10 +176,9 @@ const Page = () => {
                 console.error('Error: PE data is missing or invalid');
             }
         } catch (error) {
-            console.error(`Error fetching Records`, error);
+            console.error(`Error fetching Records Data From /Records`, error);
         }
     }
-
     const handleExpirydate = async (event) => {
         const eventValue = event.target.value;
         const apiURL = `http://localhost:5000/option-chain/all/${index || symbol}/${eventValue}`;
@@ -315,7 +318,7 @@ const Page = () => {
                     getSymbol();
                 }
             };
-            mainDataFunctions(); // Call mainDataFunctions after fetchRecordStockData
+            mainDataFunctions();
         };
 
         fetchDataAndUpdateMainData();
@@ -425,7 +428,7 @@ const Page = () => {
                         </div>
                     </div>
 
-                    <div className="flex justify-end">
+                    {  /*    <div className="flex justify-end">
                         <div className='mb-3'>
                             <label className="text-gray-700" htmlFor="datePicker">
                                 Choose a Date:
@@ -437,7 +440,7 @@ const Page = () => {
                                 onChange={handleDateChange}
                             />
                         </div>
-                    </div>
+                                    </div>*/}
 
                     <div className="overflow-x-auto">
                         <div className="table-container">
@@ -485,8 +488,8 @@ const Page = () => {
                             <Link href="/history">
                                 <Purplebutton data="View History" />
                             </Link>
-                            <Link href="/">
-                                <Purplebutton data="Go To Home" />
+                            <Link href="/records">
+                                <Purplebutton data="View Records" />
                             </Link>
                         </div>
                     </section>

@@ -13,6 +13,9 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 const port = 5000;
+const fs = require('fs')
+const path = require('path')
+const { exec } = require('child_process');
 // Using Cors
 app.use(cors({
     origin: "http://localhost:3000"
@@ -47,6 +50,16 @@ async function refreshAccessToken() {
         throw error;
     }
 }
+// function restartServer() {
+//     console.log('Restarting Express server...');
+//     exec('pm2 reload 0', (error, stdout, stderr) => {
+//         if (error) {
+//             console.error(`Error restarting server: ${error}`);
+//             return;
+//         }
+//         console.log(`Server restarted successfully: ${stdout}`);
+//     });
+// }
 async function createFyersSocket() {
     try {
         const decodedToken = jwt.decode(process.env.ACCESS_TOKEN);
@@ -54,7 +67,18 @@ async function createFyersSocket() {
             console.log('Access token is expired. Refreshing...');
             const newAccessToken = await refreshAccessToken();
             process.env.ACCESS_TOKEN = newAccessToken;
+
+            // Load .env file
+            const envFilePath = path.resolve('./.env');
+            const envContents = fs.readFileSync(envFilePath, 'utf8');
+            const updatedEnvContents = envContents.replace(/^ACCESS_TOKEN=.*/m, `ACCESS_TOKEN='${newAccessToken}'`);
+
+            // Update .env file with new access token
+            fs.writeFileSync(envFilePath, updatedEnvContents);
+
             console.log("This is Your New Access Token \n", newAccessToken);
+             // Restart the Express server
+            //  restartServer();
         }
         const fyersdata = new FyersSocket(process.env.ACCESS_TOKEN);
         return fyersdata;
@@ -64,7 +88,8 @@ async function createFyersSocket() {
         throw error;
     }
 }
-// const fyersdata = createFyersSocket()
+
+const fyersdata = createFyersSocket()
 
 // Main Api Routes
 app.use('/api/v3', require('./routes/index')); // Give Status,Ticker,Futures,Future-LTP

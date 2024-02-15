@@ -28,6 +28,9 @@ const Home = () => {
           <Link className='mx-2' href="/history">
             <span className="bg-white text-black px-6 py-2 mt-8 inline-block rounded-full font-semibold hover:bg-indigo-300 hover:text-white transition duration-300">View Historical Data</span>
           </Link>
+          <Link className='mx-2' href="/records">
+            <span className="bg-white text-black px-6 py-2 mt-8 inline-block rounded-full font-semibold hover:bg-indigo-300 hover:text-white transition duration-300">Analyze Stock Records</span>
+          </Link>
 
           {/* <Link className='mx-2' href="/records">
             <span className="bg-white text-black px-6 py-2 mt-8 inline-block rounded-full font-semibold hover:bg-indigo-300 hover:text-white transition duration-300">View Records</span>

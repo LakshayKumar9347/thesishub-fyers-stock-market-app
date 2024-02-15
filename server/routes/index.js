@@ -122,7 +122,7 @@ router.get('/history/:symbol', async (req, res) => {
             historicalData = historicalData.concat(response);
         }
 
-        console.log(historicalData);
+        // console.log(historicalData);
         res.send(historicalData);
     } catch (error) {
         handleFyersError(res, error);
@@ -135,33 +135,6 @@ router.get('/status', (req, res) => {
         console.log(error)
     })
 })
-router.get('/ltp-future/:symbol', async (req, res) => {
-    // console.log('/ltp-future s Calling');
-    const symbol = req.params.symbol.toLowerCase();
-    const date = new Date();
-    const formattedDate = formatDate(date); // Assuming formatDate function is defined elsewhere
-    try {
-        const response = await axios.get(`http://localhost:5000/api/v3/futures/${symbol}`);
-        const index = response.data.d[0].n;
-        var inp = {
-            "symbol": index,
-            "resolution": "1",
-            "date_format": "1",
-            "range_from": formattedDate,
-            "range_to": formattedDate,
-            "cont_flag": "1"
-        }
-        fyers.getHistory(inp).then((response) => {
-            // console.log(response)
-            res.send(response)
-        }).catch((err) => {
-            console.log("Future Ltp Reaced Its limit")
-        })
-    } catch (error) {
-        console.error("Error occurred:", error);
-        res.status(500).send("Internal Server Error");
-    }
-});
 router.get('/futures/:symbol', async (req, res) => {
     // console.log('/Future/Symbol is Calling');
     const currentDate = new Date();
@@ -232,6 +205,33 @@ router.get('/futures/:symbol', async (req, res) => {
         res.send(response);
     } catch (error) {
         handleFyersError(res, error);
+    }
+});
+router.get('/ltp-future/:symbol', async (req, res) => {
+    // console.log('/ltp-future s Calling');
+    const symbol = req.params.symbol.toLowerCase();
+    const date = new Date();
+    const formattedDate = formatDate(date); // Assuming formatDate function is defined elsewhere
+    try {
+        const response = await axios.get(`http://localhost:5000/api/v3/futures/${symbol}`);
+        const index = response.data.d[0].n;
+        var inp = {
+            "symbol": index,
+            "resolution": "1",
+            "date_format": "1",
+            "range_from": formattedDate,
+            "range_to": formattedDate,
+            "cont_flag": "1"
+        }
+        fyers.getHistory(inp).then((response) => {
+            // console.log(response)
+            res.send(response)
+        }).catch((err) => {
+            console.log("Future Last Traded Price Api Reaced to its limit")
+        })
+    } catch (error) {
+        console.error("Error occurred:", error);
+        res.status(500).send("Internal Server Error");
     }
 });
 function formatDate(date) {
