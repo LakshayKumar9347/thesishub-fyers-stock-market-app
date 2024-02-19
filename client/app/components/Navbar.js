@@ -6,8 +6,9 @@ import React, { useEffect, useState } from 'react'
 const Navbar = () => {
     const [price, setprice] = useState('')
     const fetchPrice = async () => {
+        const userdate = new Date()
         try {
-            const response = await fetch(`/marketfeed/api/v3/ticker/nifty`);
+            const response = await fetch(`/marketfeed/api/v3/ticker/nifty/${userdate}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
