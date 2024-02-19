@@ -14,14 +14,16 @@ router.get('/all/:symbol/:date?', async (req, res) => {
     const validStockSymbols = ['nifty', 'banknifty', 'sensex', 'finnifty', 'midcpnifty', 'bankex', 'reliance', 'bajfinance', 'hdfcbank', 'sbin', 'axisbank', 'icicibank', 'infy', 'tcs'];
     const symbol = req.params.symbol.toLowerCase();
     const date = req.params.date;
+
+    
     if (!validStockSymbols.includes(symbol)) {
         return res.status(400).json({ "error": 'Invalid stock symbol' });
     }
-    const apiUrl = `${process.env.MAIN_URL}/api/v3/ticker/${symbol}`;
+    const apiUrl = `${process.env.MAIN_URL}/api/v3/ticker/${symbol}/2024-02-09`;
     const tickerEndpoint = apiUrl;
     try {
         const tickerResponse = await axios.get(tickerEndpoint);
-        const ltp = tickerResponse.data.d[0].v.lp;
+        const ltp = tickerResponse.data.candles[0][4];
         const roundedLTP = calculateRoundedLTP(ltp, symbol)
         const totalStrikePrices = 4;
         const strikePrices = generateStrikePrices(roundedLTP, totalStrikePrices, symbol, date)
@@ -58,26 +60,38 @@ router.get('/single-strike/:symbol/:strike', async (req, res) => {
     res.send(data)
 });
 // It Generates Numerics Strikes
-router.get('/strikes/:symbol', async (req, res) => {
+router.get('/strikes/:symbol/:userdate?', async (req, res) => {
     const validStockSymbols = ['nifty', 'banknifty', 'sensex', 'finnifty', 'midcpnifty', 'bankex', 'reliance', 'bajfinance', 'hdfcbank', 'sbin', 'axisbank', 'icicibank', 'infy', 'tcs'];
     const symbol = req.params.symbol.toLowerCase();
+    const userdate = req.params.userdate;
+    let date;
+    if (userdate) {
+        date = new Date(`${userdate}`)
+    } else {
+        date = new Date()
+    }
+    const dayOfWeek = date.getDay();
+    if (dayOfWeek === 0) { // Sunday
+        date.setDate(date.getDate() - 2);
+    } else if (dayOfWeek === 6) { // Saturday
+        date.setDate(date.getDate() - 1);
+    }
+    const formattedDate = formatDate(date);
     if (!validStockSymbols.includes(symbol)) {
         return res.status(400).json({ error: 'Invalid stock symbol' });
     }
-    const tickerEndpoint = `${process.env.MAIN_URL}/api/v3/ticker/${symbol}`;
+    const tickerEndpoint = `${process.env.MAIN_URL}/api/v3/ticker/${symbol}/${formattedDate}`;//userdate modifies in ticker
     try {
         const tickerResponse = await axios.get(tickerEndpoint);
-        const ltp = tickerResponse.data.d[0].v.lp;
+        const ltp = tickerResponse.data.candles[0][4];
         const roundedLTP = calculateRoundedLTP(ltp, symbol);
         const totalStrikePrices = 4;
         const strikePrices = generateStrikePricesNumeric(roundedLTP, totalStrikePrices, symbol);
         res.json(strikePrices);
     } catch (error) {
-        console.error(error);
         res.status(500).json({ error: 'Error fetching last traded price' });
     }
 });
-
 // Generate next Expiry Dates
 function getNextExpiryDates(symbols) {
     const today = new Date();
@@ -214,7 +228,7 @@ function generateStrikePrices(roundLTP, totalStrikePrices, symbol, date = '') {
 
     let currentDate;
     let day, month, year, alpaMonth;
-    
+
 
     if (date !== '' && symbol) {
         currentDate = new Date(date)
@@ -431,5 +445,12 @@ function generateStrikePricesNumeric(roundLTP, totalStrikePrices, symbol) {
     }
 
     return strikePrices;
+}
+// Function to format date as yyyy-mm-dd
+function formatDate(date) {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 module.exports = router;

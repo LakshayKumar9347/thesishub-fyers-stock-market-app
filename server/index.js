@@ -34,7 +34,7 @@ async function refreshAccessToken() {
             grant_type: 'refresh_token',
             appIdHash: 'F3N9X26T6W-100',
             refresh_token: refresh_token,
-            pin: '1122', // Update with your pin or remove if not needed
+            pin: '1111', // Update with your pin or remove if not needed
         };
 
         const response = await axios.post(apiUrl, requestData, {
@@ -50,17 +50,16 @@ async function refreshAccessToken() {
         throw error;
     }
 }
-
- function restartServer() {
-     console.log('Restarting Express server...');
-     exec('pm2 reload 0', (error, stdout, stderr) => {
-         if (error) {
-             console.error(`Error restarting server: ${error}`);
-             return;
+function restartServer() {
+    console.log('Restarting Express server...');
+    exec('pm2 reload 0', (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error restarting server: ${error}`);
+            return;
         }
-         console.log(`Server restarted successfully: ${stdout}`);
-     });
-    }
+        console.log(`Server restarted successfully: ${stdout}`);
+    });
+}
 async function createFyersSocket() {
     try {
         const decodedToken = jwt.decode(process.env.ACCESS_TOKEN);
@@ -89,14 +88,13 @@ async function createFyersSocket() {
         throw error;
     }
 }
-
 const fyersdata = createFyersSocket()
 
 // Main Api Routes
-app.use('/api/v3', require('./routes/index')); // Give Status,Ticker,Futures,Future-LTP
 app.use('/db', require('./routes/db-routes')); // This is For Historical Stock data Page 
-app.use('/records', require('./routes/records'));
+app.use('/api/v3', require('./routes/index')); // Give Status,Ticker,Futures,Future-LTP
 app.use('/option-chain', require('./routes/option-routes'));
+app.use('/records', require('./routes/records'));
 app.get('/', (req, res) => {
     res.send("Welcome to Stock Monitoring Server");
     console.log("Welcome Mr. Lakshay")

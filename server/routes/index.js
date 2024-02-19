@@ -35,44 +35,6 @@ router.get('/authenticate', async (req, res) => {
         handleFyersError(res, error);
     }
 });
-router.get('/ticker/:symbol?', async (req, res) => {
-    const validSymbols = ['nifty', 'banknifty', 'sensex', 'finnifty', 'midcpnifty', 'bankex', 'reliance', 'bajfinance', 'hdfcbank', 'sbin', 'axisbank', 'icicibank', 'infy', 'tcs'];
-
-    let symbolsToFetch = [];
-    const indexMapping = {
-        'nifty': 'NSE:NIFTY50-INDEX',
-        'banknifty': 'NSE:NIFTYBANK-INDEX',
-        'sensex': 'BSE:SENSEX-INDEX',
-        'finnifty': 'NSE:FINNIFTY-INDEX',
-        'midcpnifty': 'NSE:MIDCPNIFTY-INDEX',
-        'bankex': 'BSE:BANKEX-INDEX',
-        'reliance': 'NSE:RELIANCE-EQ',
-        'bajfinance': 'NSE:BAJFINANCE-EQ',
-        'hdfcbank': 'NSE:HDFCBANK-EQ',
-        'sbin': 'NSE:SBIN-EQ',
-        'axisbank': 'NSE:AXISBANK-EQ',
-        'icicibank': 'NSE:ICICIBANK-EQ',
-        'infy': 'NSE:INFY-EQ',
-        'tcs': 'NSE:TCS-EQ',
-    };
-
-    if (req.params.symbol) {
-        const symbol = req.params.symbol.toLowerCase();
-        if (!validSymbols.includes(symbol)) {
-            return res.status(400).send('Invalid symbol');
-        }
-        symbolsToFetch.push(indexMapping[symbol]);
-    } else {
-        // If no symbol is provided, fetch data for all symbols
-        symbolsToFetch = Object.values(indexMapping);
-    }
-    try {
-        const response = await fyers.getQuotes(symbolsToFetch);
-        res.send(response);
-    } catch (error) {
-        handleFyersError(res, error);
-    }
-});
 router.get('/history/:symbol', async (req, res) => {
     const symbol = req.params.symbol.toLowerCase();
     const stockSymbols = {
@@ -135,6 +97,70 @@ router.get('/status', (req, res) => {
         console.log(error)
     })
 })
+router.get('/ticker/:symbol/:userdate?', async (req, res) => {``
+    const validSymbols = ['nifty', 'banknifty', 'sensex', 'finnifty', 'midcpnifty', 'bankex', 'reliance', 'bajfinance', 'hdfcbank', 'sbin', 'axisbank', 'icicibank', 'infy', 'tcs'];
+    const userdate = req.params.userdate;
+    let date;
+    if (userdate) {
+        date = new Date(`${userdate}`)
+    } else {
+        date = new Date()
+    }
+    const dayOfWeek = date.getDay();
+    if (dayOfWeek === 0) { // Sunday
+        date.setDate(date.getDate() - 2);
+    } else if (dayOfWeek === 6) { // Saturday
+        date.setDate(date.getDate() - 1);
+    }
+    const formattedDate = formatDate(date);
+    let symbolsToFetch = [];
+    const indexMapping = {
+        'nifty': 'NSE:NIFTY50-INDEX',
+        'banknifty': 'NSE:NIFTYBANK-INDEX',
+        'sensex': 'BSE:SENSEX-INDEX',
+        'finnifty': 'NSE:FINNIFTY-INDEX',
+        'midcpnifty': 'NSE:MIDCPNIFTY-INDEX',
+        'bankex': 'BSE:BANKEX-INDEX',
+        'reliance': 'NSE:RELIANCE-EQ',
+        'bajfinance': 'NSE:BAJFINANCE-EQ',
+        'hdfcbank': 'NSE:HDFCBANK-EQ',
+        'sbin': 'NSE:SBIN-EQ',
+        'axisbank': 'NSE:AXISBANK-EQ',
+        'icicibank': 'NSE:ICICIBANK-EQ',
+        'infy': 'NSE:INFY-EQ',
+        'tcs': 'NSE:TCS-EQ',
+    };
+
+    if (req.params.symbol) {
+        const symbol = req.params.symbol.toLowerCase();
+        if (!validSymbols.includes(symbol)) {
+            return res.status(400).send('Invalid symbol');
+        }
+        symbolsToFetch.push(indexMapping[symbol]);
+    } else {
+        // If no symbol is provided, fetch data for all symbols
+        symbolsToFetch = Object.values(indexMapping);
+    }
+    try {
+        // const response = await fyers.getQuotes(symbolsToFetch);
+        // res.send(response);
+        var inp = {
+            "symbol": symbolsToFetch,
+            "resolution": "D",
+            "date_format": "1",
+            "range_from": formattedDate,
+            "range_to": formattedDate,
+            "cont_flag": "1"
+        }
+        fyers.getHistory(inp).then((response) => {
+            res.send(response)
+        }).catch((err) => {
+            console.log(err)
+        })
+    } catch (error) {
+        handleFyersError(res, error);
+    }
+});
 router.get('/futures/:symbol', async (req, res) => {
     // console.log('/Future/Symbol is Calling');
     const currentDate = new Date();
@@ -207,11 +233,23 @@ router.get('/futures/:symbol', async (req, res) => {
         handleFyersError(res, error);
     }
 });
-router.get('/ltp-future/:symbol', async (req, res) => {
+router.get('/ltp-future/:symbol/:userdate?', async (req, res) => {
     // console.log('/ltp-future s Calling');
     const symbol = req.params.symbol.toLowerCase();
-    const date = new Date();
-    const formattedDate = formatDate(date); // Assuming formatDate function is defined elsewhere
+    const userdate = req.params.userdate;
+    let date;
+    if (userdate) {
+        date = new Date(`${userdate}`)
+    } else {
+        date = new Date()
+    }
+    const dayOfWeek = date.getDay();
+    if (dayOfWeek === 0) { // Sunday
+        date.setDate(date.getDate() - 2);
+    } else if (dayOfWeek === 6) { // Saturday
+        date.setDate(date.getDate() - 1);
+    }
+    const formattedDate = formatDate(date);
     try {
         const response = await axios.get(`http://localhost:5000/api/v3/futures/${symbol}`);
         const index = response.data.d[0].n;
@@ -224,10 +262,9 @@ router.get('/ltp-future/:symbol', async (req, res) => {
             "cont_flag": "1"
         }
         fyers.getHistory(inp).then((response) => {
-            // console.log(response)
             res.send(response)
         }).catch((err) => {
-            console.log("Future Last Traded Price Api Reaced to its limit")
+            console.log("Futures Ltp Limit Exceed")
         })
     } catch (error) {
         console.error("Error occurred:", error);

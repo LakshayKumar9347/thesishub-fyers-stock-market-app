@@ -79,31 +79,25 @@ router.get("/index/:symbol/:userdate?", async (req, res) => {
         res.status(500).send("Internal Server Error");
     }
 });
-// Function to format date as yyyy-mm-dd
-function formatDate(date) {
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-router.get("/ce/:symbol/:strike", async (req, res) => {
+router.get("/ce/:symbol/:strike/:userdate?", async (req, res) => {
     const symbol = req.params.symbol.toLowerCase();
     const strike = req.params.strike;
+    const userdate = req.params.userdate;
     const apiURL = `${process.env.MAIN_URL}/option-chain/single-strike/${symbol}/${strike}`;
-    const date = new Date();
-    const dayOfWeek = date.getDay();
+    let date;
+    if (userdate) {
+        date = new Date(`${userdate}`)
+    } else {
+        date = new Date()
 
-    // If it's Saturday or Sunday, adjust the date to previous Friday
+    }
+    const dayOfWeek = date.getDay();
     if (dayOfWeek === 0) { // Sunday
         date.setDate(date.getDate() - 2);
     } else if (dayOfWeek === 6) { // Saturday
         date.setDate(date.getDate() - 1);
     }
-    const currentDate = date;
-    const year = currentDate.getFullYear();
-    const month = (currentDate.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-indexed
-    const day = currentDate.getDate().toString().padStart(2, '0');
-    const formattedDate = `${year}-${month}-${day}`;
+    const formattedDate = formatDate(date);
     try {
         await limiter.removeTokens(1); // Ensure only 10 requests per second
         const response = await axios.get(apiURL);
@@ -128,24 +122,25 @@ router.get("/ce/:symbol/:strike", async (req, res) => {
         }
     }
 });
-router.get("/pe/:symbol/:strike", async (req, res) => {
+router.get("/pe/:symbol/:strike/:userdate?", async (req, res) => {
     const symbol = req.params.symbol.toLowerCase();
     const strike = req.params.strike.toLowerCase();
+    const userdate = req.params.userdate;
     const apiURL = `${process.env.MAIN_URL}/option-chain/single-strike/${symbol}/${strike}`;
-    const date = new Date();
-    const dayOfWeek = date.getDay();
+    let date;
+    if (userdate) {
+        date = new Date(`${userdate}`)
+    } else {
+        date = new Date()
 
-    // If it's Saturday or Sunday, adjust the date to previous Friday
+    }
+    const dayOfWeek = date.getDay();
     if (dayOfWeek === 0) { // Sunday
         date.setDate(date.getDate() - 2);
     } else if (dayOfWeek === 6) { // Saturday
         date.setDate(date.getDate() - 1);
     }
-    const currentDate = date;
-    const year = currentDate.getFullYear();
-    const month = (currentDate.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-indexed
-    const day = currentDate.getDate().toString().padStart(2, '0');
-    const formattedDate = `${year}-${month}-${day}`;
+    const formattedDate = formatDate(date);
     try {
         await limiter.removeTokens(1); // Ensure only 10 requests per second
         const response = await axios.get(apiURL);
@@ -170,7 +165,6 @@ router.get("/pe/:symbol/:strike", async (req, res) => {
         }
     }
 });
-
 // /Records page Historical data
 router.get('/history/:symbol/:userdate?', async (req, res) => {
     const userdate = req.params.userdate;
@@ -180,7 +174,6 @@ router.get('/history/:symbol/:userdate?', async (req, res) => {
             date = new Date(`${userdate}`)
         } else {
             date = new Date()
-
         }
         const dayOfWeek = date.getDay();
         if (dayOfWeek === 0) { // Sunday
@@ -239,4 +232,11 @@ router.get('/history/:symbol/:userdate?', async (req, res) => {
         res.status(500).send("Internal Server Error");
     }
 })
+// Function to format date as yyyy-mm-dd
+function formatDate(date) {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
 module.exports = router

@@ -177,7 +177,7 @@ const Page = () => {
                                 <PurpleButton data="Explore Dashboard" />
                             </Link>
                            <Link href="/records">
-                                <PurpleButton data="Analyze Records" />
+                                <PurpleButton data="Analyze Stock Records" />
                         </Link>
                         </div>
                     </section>
