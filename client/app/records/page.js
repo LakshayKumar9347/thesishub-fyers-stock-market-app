@@ -33,7 +33,7 @@ const Page = () => {
     const fetchRealTimeData = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:5000/option-chain/all/${index || symbol}`);
+            const response = await fetch(`/marketfeed/option-chain/all/${index || symbol}`);
 
             if (!response.ok) {
                 throw new Error(`Failed to fetch data. HTTP error! Status: ${response.status}`);
@@ -59,7 +59,7 @@ const Page = () => {
     const fetchStrikePrices = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:5000/option-chain/strikes/${index || symbol}/${selectedDate}`);
+            const response = await fetch(`/marketfeed/option-chain/strikes/${index || symbol}/${selectedDate}`);
             const parsedData = await response.json();
             const strikePrices = parsedData;
             setStrikePrices(strikePrices);
@@ -72,7 +72,7 @@ const Page = () => {
     // const fetchExpirydates = async () => {
     //     try {
     //         setLoading(true);
-    //         const response = await fetch(`http://localhost:5000/option-chain/expiry/${index || symbol}`);
+    //         const response = await fetch(`/marketfeed/option-chain/expiry/${index || symbol}`);
     //         const parsedData = await response.json();
     //         const expirydates = parsedData;
     //         setexpiryDates(expirydates[0])
@@ -84,7 +84,7 @@ const Page = () => {
     //     }
     // };
     const fetchSpotLTP = async () => {
-        const apiUrl = `http://localhost:5000/records/index/${index || symbol}/${selectedDate}`;
+        const apiUrl = `/marketfeed/records/index/${index || symbol}/${selectedDate}`;
         try {
             const response = await fetch(apiUrl);
             if (!response.ok) {
@@ -103,7 +103,7 @@ const Page = () => {
     };
     const fetchFuturesData = async () => {
         try {
-            const apiUrl = `http://localhost:5000/api/v3/ltp-future/${index || symbol}/${selectedDate}`;
+            const apiUrl = `/marketfeed/api/v3/ltp-future/${index || symbol}/${selectedDate}`;
             const response = await fetch(apiUrl);
 
             if (!response.ok) {
@@ -120,8 +120,8 @@ const Page = () => {
     };
     const fetchRecordStockData = async (value) => {
         try {
-            const responseCE = await fetch(`http://localhost:5000/records/ce/${index || symbol}/${value}/${selectedDate}`);
-            const responsePE = await fetch(`http://localhost:5000/records/pe/${index || symbol}/${value}/${selectedDate}`);
+            const responseCE = await fetch(`/marketfeed/records/ce/${index || symbol}/${value}/${selectedDate}`);
+            const responsePE = await fetch(`/marketfeed/records/pe/${index || symbol}/${value}/${selectedDate}`);
             const parsedDataCE = await responseCE.json();
             const parsedDataPE = await responsePE.json();
 
@@ -160,7 +160,7 @@ const Page = () => {
     };
     // const handleExpirydate = async (event) => {
     //     const eventValue = event.target.value;
-    //     const apiURL = `http://localhost:5000/option-chain/all/${index || symbol}/${eventValue}`;
+    //     const apiURL = `/marketfeed/option-chain/all/${index || symbol}/${eventValue}`;
     //     setselectedExpiryDate([eventValue]);
     //     setLoading(true);
 
