@@ -6,17 +6,26 @@ import React, { useEffect, useState } from 'react'
 const Navbar = () => {
     const [price, setprice] = useState('')
     const fetchPrice = async () => {
-        const userdate = new Date()
+        const date = new Date()
+        const userdate = formatDate(date)
+        // console.log(userdate);
         try {
             const response = await fetch(`/marketfeed/api/v3/ticker/nifty/${userdate}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
             const jsonData = await response.json();
-            setprice(jsonData.d[0].v.lp);
+            // console.log(jsonData.candles[0][4]);
+            setprice(jsonData.candles[0][4]);
         } catch (error) {
             console.error('Error fetching data:', error);
         }
+    }
+    function formatDate(date) {
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
     useEffect(() => {
         fetchPrice();
