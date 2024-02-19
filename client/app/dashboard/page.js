@@ -444,7 +444,7 @@ const Page = () => {
             </div>
         </div>
 
-        <div className="flex justify-end">
+        {/* <div className="flex justify-end">
             <div className='mb-3'>
                 <label className="text-gray-700" htmlFor="datePicker">
                     Choose a Date:
@@ -456,7 +456,7 @@ const Page = () => {
                     onChange={handleDateChange}
                 />
             </div>
-        </div>
+        </div> */}
 
         <div className="overflow-x-auto">
             <div className="table-container">
