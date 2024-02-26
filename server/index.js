@@ -11,7 +11,13 @@ const axios = require('axios')
 const jwt = require('jsonwebtoken')
 const app = express();
 const server = http.createServer(app);
-const io = socketIO(server);
+const io = socketIO(server, {
+    cors: {
+        origin: "http://localhost:3000",
+        methods: ["GET", "POST"],
+        credentials: true
+    }
+});
 const port = 5000;
 const fs = require('fs')
 const path = require('path')
@@ -88,98 +94,93 @@ async function createFyersSocket() {
         throw error;
     }
 }
-const fyersdata = createFyersSocket()
+createFyersSocket().then((fyersdata) => {
 
-// Main Api Routes
-app.use('/db', require('./routes/db-routes')); // This is For Historical Stock data Page 
-app.use('/api/v3', require('./routes/index')); // Give Status,Ticker,Futures,Future-LTP
-app.use('/option-chain', require('./routes/option-routes'));
-app.use('/records', require('./routes/records'));
-app.get('/', (req, res) => {
-    res.send("Welcome to Stock Monitoring Server");
-    console.log("Welcome Mr. Lakshay")
-});
+    // Main Api Routes
+    app.use('/db', require('./routes/db-routes')); // This is For Historical Stock data Page 
+    app.use('/api/v3', require('./routes/index')); // Give Status,Ticker,Futures,Future-LTP
+    app.use('/option-chain', require('./routes/option-routes'));
+    app.use('/records', require('./routes/records'));
+    app.get('/', (req, res) => {
+        res.send("Welcome to Stock Monitoring Server");
+        console.log("Welcome Mr. Lakshay")
+    });
 
-// WebSocket Connection are Currently OFF
-io.off('connection', (socket) => {
-    // All the Symbols
-    const stockSymbols = {
-        'nifty': 'NSE:NIFTY50-INDEX',
-        'banknifty': 'NSE:NIFTYBANK-INDEX',
-        'sensex': 'BSE:SENSEX-INDEX',
-        'finnifty': 'NSE:FINNIFTY-INDEX',
-        'midcpnifty': 'NSE:MIDCPNIFTY-INDEX',
-        'bankex': 'BSE:BANKEX-INDEX',
-        'reliance': 'NSE:RELIANCE-EQ',
-        'bajfinance': 'NSE:BAJFINANCE-EQ',
-        'hdfcbank': 'NSE:HDFCBANK-EQ',
-        'sbin': 'NSE:SBIN-EQ',
-        'axisbank': 'NSE:AXISBANK-EQ',
-        'icicibank': 'NSE:ICICIBANK-EQ',
-        'infy': 'NSE:INFY-EQ',
-        'tcs': 'NSE:TCS-EQ',
-    };
+    io.on('connection', (socket) => {
+        // All the Symbols
+        const stockSymbols = {
+            'nifty': 'NSE:NIFTY50-INDEX',
+            'banknifty': 'NSE:NIFTYBANK-INDEX',
+            'sensex': 'BSE:SENSEX-INDEX',
+            'finnifty': 'NSE:FINNIFTY-INDEX',
+            'midcpnifty': 'NSE:MIDCPNIFTY-INDEX',
+            'bankex': 'BSE:BANKEX-INDEX',
+            'reliance': 'NSE:RELIANCE-EQ',
+            'bajfinance': 'NSE:BAJFINANCE-EQ',
+            'hdfcbank': 'NSE:HDFCBANK-EQ',
+            'sbin': 'NSE:SBIN-EQ',
+            'axisbank': 'NSE:AXISBANK-EQ',
+            'icicibank': 'NSE:ICICIBANK-EQ',
+            'infy': 'NSE:INFY-EQ',
+            'tcs': 'NSE:TCS-EQ',
+        };
 
-    function onmsg(message) {
-        socket.emit('message', message);
-    }
+        let subscribedSymbols = [];
 
-    function onconnect(symbols) {
-        fyersdata.subscribe(symbols);
-        fyersdata.autoreconnect();
-    }
+        function onmsg(message) {
+            console.log(message);
+            socket.emit('symbolData', message);
+        }
 
-    function onerror(err) {
-        console.error(err, handleFyersError);
-    }
+        function onconnect() {
+            fyersdata.subscribe(subscribedSymbols)
+            fyersdata.autoreconnect();
+        }
 
-    function onclose(symbols) {
-        console.log(`Socket closed for ${symbols}`);
-    }
+        function onerror(err) {
+            console.log("This is onerror", err);
+        }
 
-    fyersdata.on("message", onmsg);
-    fyersdata.on("connect", onconnect);
-    fyersdata.on("error", onerror);
-    fyersdata.on("close", onclose);
+        function onclose() {
+            console.log("socket closed");
+            fyersdata.unsubscribe(subscribedSymbols)
+        }
 
-    try {
-        fyersdata.connect();
-    } catch (err) {
-        handleFyersError(err);
-    }
-
-    socket.on('symbol', async (userFriendlySymbol) => {
-        const stockSymbol = stockSymbols[userFriendlySymbol];
-        if (stockSymbol) {
-            try {
-                // const response = await axios.get(`http://localhost:5000/api/v3/ticker/${userFriendlySymbol}`);
-                // const ltp = response.data.d[0].v.lp;
-                // const roundedLTP = calculateRoundedLTP(ltp, userFriendlySymbol);
-                // const totalStrikePrice = 9;
-                // const strikePrices = generateStrikePrices(roundedLTP, totalStrikePrice, userFriendlySymbol);
-
-                // const symbolsToConnect = [stockSymbol, ...strikePrices];
-                onconnect(symbolsToConnect);
-                // Emit response as an array
-                socket.emit('Socket Emit', symbolsToConnect);
-
-            } catch (error) {
-                console.error(`InValid Symbol ${userFriendlySymbol}:`, error);
+        socket.on('SpotLTPData', (symbol) => {
+            const originalSymbol = stockSymbols[symbol];
+            if (originalSymbol) {
+                subscribedSymbols = [originalSymbol]
+                onconnect()
             }
-        } else {
-            console.log(`Invalid symbol: ${userFriendlySymbol}`);
-        }
+        });
+        socket.on('FutureLTPData', (symbol) => {
+            const originalSymbol = symbol;
+            if (originalSymbol) {
+                subscribedSymbols.push(originalSymbol)
+                onconnect()
+            }
+        });
+        socket.on('OptionSymbolData', (symbol) => {
+            const originalSymbol = symbol;
+            if (originalSymbol) {
+                subscribedSymbols.push(originalSymbol[0], originalSymbol[1])
+                onconnect()
+            }
+        });
+
+        socket.on('disconnect', () => {
+            fyersdata.unsubscribe(subscribedSymbols)
+        });
+
+        fyersdata.on("message", onmsg);
+        fyersdata.on("connect", onconnect);
+        fyersdata.on("error", onerror);
+        fyersdata.on("close", onclose);
+
+        fyersdata.connect();
     });
 
-    socket.on('disconnect', () => {
-        const userFriendlySymbol = socket.userFriendlySymbol;
-        if (userFriendlySymbol) {
-            const stockSymbol = stockSymbols[userFriendlySymbol];
-            onclose([stockSymbol, ...strikePrices]);
-            fyersdata.unsubscribe([stockSymbol, ...strikePrices]);
-        }
-    });
-});
+})
 
 // Server Up & Running
 server.listen(port, () => {

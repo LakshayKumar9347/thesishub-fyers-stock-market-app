@@ -12,11 +12,10 @@ const Page = () => {
     const [symbol, setSymbol] = useState('');
     const [index, setIndex] = useState('nifty');
 
-    // Fetch real-time data from the server
     const fetchRealTimeData = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`/marketfeed/db/history/${index || symbol}`);
+            const response = await fetch(`http://localhost:5000/db/history/${index || symbol}`);
 
             if (!response.ok) {
                 throw new Error(`Failed to fetch data. HTTP error! Status: ${response.status}`);
@@ -36,7 +35,6 @@ const Page = () => {
             setLoading(false);
         }
     };
-    // console.log(stockData);
     const handleIndexChange = (event) => {
         const newIndex = event.target.value;
 
@@ -48,7 +46,6 @@ const Page = () => {
         setLoading(true);
         setIndex(newIndex);
     };
-
     const handleSymbolChange = (event) => {
         const newSymbol = event.target.value;
 
@@ -60,7 +57,6 @@ const Page = () => {
         setLoading(true);
         setSymbol(newSymbol);
     };
-
     function convertEpochToIndiaDate(epochTimestamp) {
         const epochMillis = epochTimestamp * 1000;
         const date = new Date(epochMillis);
@@ -160,7 +156,7 @@ const Page = () => {
                             </table>
                         </div>
                     </div>
-                    
+
                     <div className="container m-9 text-center flex justify-center">
                         {loading &&
                             <Loading />}
@@ -176,9 +172,9 @@ const Page = () => {
                             <Link href="/dashboard">
                                 <PurpleButton data="Explore Dashboard" />
                             </Link>
-                           <Link href="/records">
+                            <Link href="/records">
                                 <PurpleButton data="Analyze Stock Records" />
-                        </Link>
+                            </Link>
                         </div>
                     </section>
                 </footer>

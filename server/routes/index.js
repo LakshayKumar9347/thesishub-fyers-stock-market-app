@@ -97,7 +97,7 @@ router.get('/status', (req, res) => {
         console.log(error)
     })
 })
-router.get('/ticker/:symbol/:userdate?', async (req, res) => {``
+router.get('/ticker/:symbol/:userdate?', async (req, res) => {
     const validSymbols = ['nifty', 'banknifty', 'sensex', 'finnifty', 'midcpnifty', 'bankex', 'reliance', 'bajfinance', 'hdfcbank', 'sbin', 'axisbank', 'icicibank', 'infy', 'tcs'];
     const userdate = req.params.userdate;
     let date;
@@ -155,7 +155,7 @@ router.get('/ticker/:symbol/:userdate?', async (req, res) => {``
         fyers.getHistory(inp).then((response) => {
             res.send(response)
         }).catch((err) => {
-            console.log(err)
+            console.log("Ticker Limit Exceed")
         })
     } catch (error) {
         handleFyersError(res, error);

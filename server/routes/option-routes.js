@@ -15,7 +15,7 @@ router.get('/all/:symbol/:date?', async (req, res) => {
     const symbol = req.params.symbol.toLowerCase();
     const date = req.params.date;
 
-    
+
     if (!validStockSymbols.includes(symbol)) {
         return res.status(400).json({ "error": 'Invalid stock symbol' });
     }
@@ -49,7 +49,6 @@ router.get('/single-strike/:symbol/:strike', async (req, res) => {
     const validStockSymbols = ['nifty', 'banknifty', 'sensex', 'finnifty', 'midcpnifty', 'bankex', 'reliance', 'bajfinance', 'hdfcbank', 'sbin', 'axisbank', 'icicibank', 'infy', 'tcs'];
     const symbol = req.params.symbol.toLowerCase();
     const strike = req.params.strike.toLowerCase();
-
     if (!validStockSymbols.includes(symbol)) {
         return res.status(400).json({ error: 'Invalid stock symbol' });
     }
@@ -180,8 +179,8 @@ function generateStrikePrices(roundLTP, totalStrikePrices, symbol, date = '') {
         const nextWeekday = new Date(date);
         nextWeekday.setDate(date.getDate() + daysUntilNextWeekday);
 
-        const month = (nextWeekday.getMonth() + 1).toString().padStart(2, '0');
-        const day = nextWeekday.getDate().toString().padStart(2, '0');
+        const month = Number((nextWeekday.getMonth() + 1).toString().padStart(2, '0'));
+        const day = Number(nextWeekday.getDate().toString().padStart(2, '0'));
         return { month, day };
     }
     function getLastWeekdayOfMonth(date, dayIndex) {
@@ -228,7 +227,7 @@ function generateStrikePrices(roundLTP, totalStrikePrices, symbol, date = '') {
 
     let currentDate;
     let day, month, year, alpaMonth;
-
+    let nextWeekdayResult, lastWeekdayOfMonthResult;
 
     if (date !== '' && symbol) {
         currentDate = new Date(date)
@@ -275,28 +274,75 @@ function generateStrikePrices(roundLTP, totalStrikePrices, symbol, date = '') {
         currentDate = new Date()
         switch (symbol) {
             case 'nifty':
-                ({ month, day } = getNextWeekday(currentDate, 4))
+                nextWeekdayResult = getNextWeekday(currentDate, 4);
+                lastWeekdayOfMonthResult = getLastWeekdayOfMonth(currentDate, 4);
+                if ((nextWeekdayResult.day === lastWeekdayOfMonthResult.day) && (nextWeekdayResult.month === lastWeekdayOfMonthResult.month)) {
+                    month = numericToShortMonth(nextWeekdayResult.month)
+                    alpaMonth = numericToShortMonth(nextWeekdayResult.month)
+                    day = 69
+                } else {
+                    ({ month, day } = getNextWeekday(currentDate, 4));
+                }
                 break;
             case 'banknifty':
-                ({ month, day } = getNextWeekday(currentDate, 3))
+                nextWeekdayResult = getNextWeekday(currentDate, 3);
+                lastWeekdayOfMonthResult = getLastWeekdayOfMonth(currentDate, 3);
+                if ((nextWeekdayResult.day === lastWeekdayOfMonthResult.day) && (nextWeekdayResult.month === lastWeekdayOfMonthResult.month)) {
+                    month = numericToShortMonth(nextWeekdayResult.month)
+                    alpaMonth = numericToShortMonth(nextWeekdayResult.month)
+                    day = 69
+                } else {
+                    ({ month, day } = getNextWeekday(currentDate, 3));
+                }
                 break;
             case 'finnifty':
-                ({ month, day } = getNextWeekday(currentDate, 2))
+                nextWeekdayResult = getNextWeekday(currentDate, 2);
+                lastWeekdayOfMonthResult = getLastWeekdayOfMonth(currentDate, 2);
+                if ((nextWeekdayResult.day === lastWeekdayOfMonthResult.day) && (nextWeekdayResult.month === lastWeekdayOfMonthResult.month)) {
+                    month = numericToShortMonth(nextWeekdayResult.month)
+                    alpaMonth = numericToShortMonth(nextWeekdayResult.month)
+                    day = 69
+                } else {
+                    ({ month, day } = getNextWeekday(currentDate, 2));
+                }
                 break;
             case 'midcpnifty':
-                ({ month, day } = getNextWeekday(currentDate, 1))
+                nextWeekdayResult = getNextWeekday(currentDate, 1);
+                lastWeekdayOfMonthResult = getLastWeekdayOfMonth(currentDate, 1);
+                if ((nextWeekdayResult.day === lastWeekdayOfMonthResult.day) && (nextWeekdayResult.month === lastWeekdayOfMonthResult.month)) {
+                    month = numericToShortMonth(nextWeekdayResult.month)
+                    alpaMonth = numericToShortMonth(nextWeekdayResult.month)
+                    day = 69
+                } else {
+                    ({ month, day } = getNextWeekday(currentDate, 1));
+                }
                 break;
             case 'sensex':
-                ({ month, day } = getNextWeekday(currentDate, 5))
+                nextWeekdayResult = getNextWeekday(currentDate, 5);
+                lastWeekdayOfMonthResult = getLastWeekdayOfMonth(currentDate, 5);
+                if ((nextWeekdayResult.day === lastWeekdayOfMonthResult.day) && (nextWeekdayResult.month === lastWeekdayOfMonthResult.month)) {
+                    month = numericToShortMonth(nextWeekdayResult.month)
+                    alpaMonth = numericToShortMonth(nextWeekdayResult.month)
+                    day = 69
+                } else {
+                    ({ month, day } = getNextWeekday(currentDate, 5));
+                }
                 break;
             case 'bankex':
-                ({ month, day } = getNextWeekday(currentDate, 1))
+                nextWeekdayResult = getNextWeekday(currentDate, 1);
+                lastWeekdayOfMonthResult = getLastWeekdayOfMonth(currentDate, 1);
+                if ((nextWeekdayResult.day === lastWeekdayOfMonthResult.day) && (nextWeekdayResult.month === lastWeekdayOfMonthResult.month)) {
+                    month = numericToShortMonth(nextWeekdayResult.month)
+                    alpaMonth = numericToShortMonth(nextWeekdayResult.month)
+                    day = 69
+                } else {
+                    ({ month, day } = getNextWeekday(currentDate, 1));
+                }
                 break;
             default:
                 alpaMonth = new Date().toLocaleString('default', { month: 'short' }).toUpperCase();
                 day = 69
                 break;
-
         }
     }
 
@@ -313,7 +359,6 @@ function generateStrikePrices(roundLTP, totalStrikePrices, symbol, date = '') {
     } else {
         monthShort = alpaMonth;
     }
-
     const yearShort = year || currentDate.toLocaleDateString('en-US', { year: '2-digit' }).slice(-2);
     if (totalStrikePrices != 0) {
         for (let i = -numStrikesBefore; i <= numStrikesAfter; i++) {
@@ -336,17 +381,34 @@ function generateStrikePricesSingle(roundLTP, totalStrikePrices, symbol) {
         const nextWeekday = new Date(date);
         nextWeekday.setDate(date.getDate() + daysUntilNextWeekday);
 
-        const month = (nextWeekday.getMonth() + 1).toString().padStart(2, '0');
-        const day = nextWeekday.getDate().toString().padStart(2, '0');
+        const month = Number((nextWeekday.getMonth() + 1).toString().padStart(2, '0'));
+        const day = Number(nextWeekday.getDate().toString().padStart(2, '0'));
+        return { month, day };
+    }
+    function getLastWeekdayOfMonth(date, dayIndex) {
+        const lastDayOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        const lastDayOfWeek = lastDayOfMonth.getDay(); // Day of the week of the last day of the month
+        let daysUntilLastWeekday = dayIndex - lastDayOfWeek;
+        if (daysUntilLastWeekday > 0) {
+            daysUntilLastWeekday -= 7; // Adjust if the target day is after the last day of the month
+        }
+        const lastWeekday = new Date(lastDayOfMonth);
+        lastWeekday.setDate(lastDayOfMonth.getDate() + daysUntilLastWeekday);
+
+        const month = Number((lastWeekday.getMonth() + 1).toString().padStart(2, '0'));
+        const day = Number(lastWeekday.getDate().toString().padStart(2, '0'));
 
         return { month, day };
     }
-    // function getLastWeekdayOfMonth(date, dayIndex) {
-    //     const lastDayOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-    //     const lastWeekdayOfMonth = new Date(lastDayOfMonth);
-    //     lastWeekdayOfMonth.setDate(lastDayOfMonth.getDate() - ((lastDayOfMonth.getDay() + 6 - dayIndex) % 7));
-    //     return lastWeekdayOfMonth;
-    // }
+    function numericToShortMonth(numericMonth) {
+        const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+        const index = numericMonth - 1;
+        if (index >= 0 && index < months.length) {
+            return months[index];
+        } else {
+            return "Invalid month";
+        }
+    }
     const symbolConfig = {
         'nifty': 50,
         'finnifty': 50,
@@ -365,32 +427,115 @@ function generateStrikePricesSingle(roundLTP, totalStrikePrices, symbol) {
     };
     const gap = symbolConfig[symbol];
     const currentDate = new Date();
-    let day, month, alpaMonth // *Day is nothing just a Expiry Dat
+    let day, month, alpaMonth 
+    let nextWeekdayResult, lastWeekdayOfMonthResult;
+
     switch (symbol) {
         case 'nifty':
-            ({ month, day } = getNextWeekday(currentDate, 4))
+            nextWeekdayResult = getNextWeekday(currentDate, 4);
+            lastWeekdayOfMonthResult = getLastWeekdayOfMonth(currentDate, 4);
+            if ((nextWeekdayResult.day === lastWeekdayOfMonthResult.day) && (nextWeekdayResult.month === lastWeekdayOfMonthResult.month)) {
+                month = numericToShortMonth(nextWeekdayResult.month)
+                alpaMonth = numericToShortMonth(nextWeekdayResult.month)
+                day = 69
+            } else {
+                ({ month, day } = getNextWeekday(currentDate, 4));
+            }
             break;
         case 'banknifty':
-            ({ month, day } = getNextWeekday(currentDate, 3))
+            nextWeekdayResult = getNextWeekday(currentDate, 3);
+            lastWeekdayOfMonthResult = getLastWeekdayOfMonth(currentDate, 3);
+            if ((nextWeekdayResult.day === lastWeekdayOfMonthResult.day) && (nextWeekdayResult.month === lastWeekdayOfMonthResult.month)) {
+                month = numericToShortMonth(nextWeekdayResult.month)
+                alpaMonth = numericToShortMonth(nextWeekdayResult.month)
+                day = 69
+            } else {
+                ({ month, day } = getNextWeekday(currentDate, 3));
+            }
             break;
         case 'finnifty':
-            ({ month, day } = getNextWeekday(currentDate, 2))
+            nextWeekdayResult = getNextWeekday(currentDate, 2);
+            lastWeekdayOfMonthResult = getLastWeekdayOfMonth(currentDate, 2);
+            if ((nextWeekdayResult.day === lastWeekdayOfMonthResult.day) && (nextWeekdayResult.month === lastWeekdayOfMonthResult.month)) {
+                month = numericToShortMonth(nextWeekdayResult.month)
+                alpaMonth = numericToShortMonth(nextWeekdayResult.month)
+                day = 69
+            } else {
+                ({ month, day } = getNextWeekday(currentDate, 2));
+            }
             break;
         case 'midcpnifty':
-            ({ month, day } = getNextWeekday(currentDate, 1))
+            nextWeekdayResult = getNextWeekday(currentDate, 1);
+            lastWeekdayOfMonthResult = getLastWeekdayOfMonth(currentDate, 1);
+            if ((nextWeekdayResult.day === lastWeekdayOfMonthResult.day) && (nextWeekdayResult.month === lastWeekdayOfMonthResult.month)) {
+                month = numericToShortMonth(nextWeekdayResult.month)
+                alpaMonth = numericToShortMonth(nextWeekdayResult.month)
+                day = 69
+            } else {
+                ({ month, day } = getNextWeekday(currentDate, 1));
+            }
             break;
         case 'sensex':
-            ({ month, day } = getNextWeekday(currentDate, 5))
+            nextWeekdayResult = getNextWeekday(currentDate, 5);
+            lastWeekdayOfMonthResult = getLastWeekdayOfMonth(currentDate, 5);
+            if ((nextWeekdayResult.day === lastWeekdayOfMonthResult.day) && (nextWeekdayResult.month === lastWeekdayOfMonthResult.month)) {
+                month = numericToShortMonth(nextWeekdayResult.month)
+                alpaMonth = numericToShortMonth(nextWeekdayResult.month)
+                day = 69
+            } else {
+                ({ month, day } = getNextWeekday(currentDate, 5));
+            }
             break;
         case 'bankex':
-            ({ month, day } = getNextWeekday(currentDate, 1))
+            nextWeekdayResult = getNextWeekday(currentDate, 1);
+            lastWeekdayOfMonthResult = getLastWeekdayOfMonth(currentDate, 1);
+            if ((nextWeekdayResult.day === lastWeekdayOfMonthResult.day) && (nextWeekdayResult.month === lastWeekdayOfMonthResult.month)) {
+                month = numericToShortMonth(nextWeekdayResult.month)
+                alpaMonth = numericToShortMonth(nextWeekdayResult.month)
+                day = 69
+            } else {
+                ({ month, day } = getNextWeekday(currentDate, 1));
+            }
             break;
         default:
             alpaMonth = new Date().toLocaleString('default', { month: 'short' }).toUpperCase();
-
             day = 69
             break;
     }
+    // switch (symbol) {
+    //     case 'nifty':
+    //         ({ month, day } = getNextWeekday(currentDate, 4))
+    //         break;
+    //     case 'banknifty':
+    //         ({ month, day } = getNextWeekday(currentDate, 3))
+    //         break;
+    //     case 'finnifty':
+    //         ({ month, day } = getNextWeekday(currentDate, 2))
+    //         break;
+    //     case 'midcpnifty':
+    //         ({ month, day } = getNextWeekday(currentDate, 1))
+    //         break;
+    //     case 'sensex':
+    //         ({ month, day } = getNextWeekday(currentDate, 5))
+    //         break;
+    //     case 'bankex':
+    //         ({ month, day } = getNextWeekday(currentDate, 1))
+    //         break;
+    //     default:
+    //         alpaMonth = new Date().toLocaleString('default', { month: 'short' }).toUpperCase();
+
+    //         day = 69
+    //         break;
+    // }
+
+
+
+
+
+
+
+
+
     let monthShort;
 
     if (month >= 1 && month <= 9) {

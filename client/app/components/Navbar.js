@@ -10,7 +10,7 @@ const Navbar = () => {
         const userdate = formatDate(date)
         // console.log(userdate);
         try {
-            const response = await fetch(`/marketfeed/api/v3/ticker/nifty/${userdate}`);
+            const response = await fetch(`http://localhost:5000/api/v3/ticker/nifty/${userdate}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
