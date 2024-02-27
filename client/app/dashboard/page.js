@@ -50,7 +50,7 @@ const Page = () => {
             PeStrikeSymbol = OptionsResponse.data.d[1].n
         }
         try {
-            socket = io('http://localhost:5000');
+            socket = io('/marketfeed');
 
             socket.on('connect', async () => {
                 socket.emit('SpotLTPData', index || symbol);
