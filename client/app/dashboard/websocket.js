@@ -13,6 +13,7 @@ const Page = () => {
     // All the variable that we are using for storing the data in response
     const [loading, setLoading] = useState(true);
     const [spotLTP, setSpotLTP] = useState([]);
+    const [spotLTPCompleteData, setSpotLTPCompleteData] = useState([]);
     const [Divergencedata, setDivergencedata] = useState([])
     const [futureDivergenceData, setfutureDivergenceData] = useState([])
     const [CeDivergencedata, setCeDivergencedata] = useState([])
@@ -21,9 +22,12 @@ const Page = () => {
     const [stockDataPE, setStockDataPE] = useState([]);
     const [expiryDates, setexpiryDates] = useState([])
     const [recordStockDataCE, setRecordStockDataCE] = useState([]);
+    const [recordStockDataCECompleteData, setRecordStockDataCECompleteData] = useState([]);
     const [recordStockDataPE, setRecordStockDataPE] = useState([]);
-    const [timeUpdateDuration, setTimeUpdateDuration] = useState(60006);
+    const [recordStockDataPECompleteData, setRecordStockDataPECompleteData] = useState([]);
+    const [timeUpdateDuration, setTimeUpdateDuration] = useState(30);
     const [futuresData, setFuturesData] = useState([]);
+    const [futuresDataCompleteData, setFuturesDataCompleteData] = useState([]);
     const [strikePrices, setStrikePrices] = useState([]);
     const [selectedExpiryDate, setselectedExpiryDate] = useState('')
     const [selectedStrikePrice, setSelectedStrikePrice] = useState('');
@@ -33,52 +37,76 @@ const Page = () => {
     // Mai Function Which Fetch Data from Server
     const fetchSpotLTP = async () => {
         let socket;
-        let previousEpochTimes = new Set();
-        const futuresResponse = await axios.get(`http://localhost:5000/api/v3/futures/${index || symbol}`);
+        const futuresResponse = await axios.get(`/marketfeed/api/v3/futures/${index || symbol}`);
         const futureSymbol = futuresResponse.data.d[0].n;
         let OptionsResponse, CeStrikeSymbol, PeStrikeSymbol
         if (selectedStrikePrice !== '') {
-            OptionsResponse = await axios.get(`http://localhost:5000/option-chain/single-strike/${index || symbol}/${selectedStrikePrice}`)
+            setRecordStockDataCECompleteData([])
+            setRecordStockDataPECompleteData([])
+            setRecordStockDataCE([])
+            setRecordStockDataPE([])
+            OptionsResponse = await axios.get(`/marketfeed/option-chain/single-strike/${index || symbol}/${selectedStrikePrice}`)
             CeStrikeSymbol = OptionsResponse.data.d[0].n
             PeStrikeSymbol = OptionsResponse.data.d[1].n
         }
         try {
-            socket = io('http://localhost:5000');
+            socket = io('/marketfeed');
 
             socket.on('connect', async () => {
-                console.log('Connected to socket server');
                 socket.emit('SpotLTPData', index || symbol);
                 socket.emit('FutureLTPData', futureSymbol);
                 if (selectedStrikePrice !== '') {
                     socket.emit('OptionSymbolData', [CeStrikeSymbol, PeStrikeSymbol]);
                 }
             });
-
             socket.on('symbolData', (data) => {
                 if (data.code !== 200) {
                     const indianTime = convertEpochToIndiaTime(data.exch_feed_time);
                     if (data.symbol === futureSymbol) {
-                        setFuturesData((prevData) => [
-                            ...prevData,
-                            { symbol: data.symbol, ltp: data.ltp, exch_feed_time: data.exch_feed_time }
-                        ]);
+                        setFuturesDataCompleteData((prevData) => {
+                            const newData = [
+                                ...prevData,
+                                { symbol: data.symbol, ltp: data.ltp, exch_feed_time: data.exch_feed_time, indian_time: indianTime }
+                            ];
+                            const filteredData = filterMinuteData(newData)
+                            setFuturesData(filteredData)
+                            return newData;
+                        });
                     }
-                    else if (data.symbol === CeStrikeSymbol) {
-                        setCeDivergencedata((prevData) => [
-                            ...prevData,
-                            { symbol: data.symbol, ltp: data.ltp, exch_feed_time: data.exch_feed_time }
-                        ]);
-                    } else if (data.symbol === PeStrikeSymbol) {
-                        setPeDivergencedata((prevData) => [
-                            ...prevData,
-                            { symbol: data.symbol, ltp: data.ltp, exch_feed_time: data.exch_feed_time }
-                        ]);
-                    } else {
-                        setSpotLTP((prevData) => [
-                            ...prevData,
-                            { symbol: data.symbol, ltp: data.ltp, exch_feed_time: data.exch_feed_time }
-                        ]);
-                        DivergenceData()
+                    else {
+                        setSpotLTPCompleteData((prevData) => {
+                            const newData = [
+                                ...prevData,
+                                { symbol: data.symbol, ltp: data.ltp, exch_feed_time: data.exch_feed_time, indian_time: indianTime }
+                            ];
+                            const filteredData = filterMinuteData(newData);
+                            if (JSON.stringify(filteredData) !== JSON.stringify(prevData)) {
+                                setSpotLTP(filteredData);
+                            }
+                            return newData;
+                        });
+                    } if (selectedStrikePrice !== '') {
+                        if (data.symbol === CeStrikeSymbol) {
+                            setRecordStockDataCECompleteData((prevData) => {
+                                const newData = [
+                                    ...prevData,
+                                    { symbol: data.symbol, ltp: data.ltp, exch_feed_time: data.exch_feed_time, indian_time: indianTime }
+                                ];
+                                const filteredData = filterMinuteData(newData);
+                                setRecordStockDataCE(filteredData)
+                                return newData;
+                            });
+                        } else if (data.symbol === PeStrikeSymbol) {
+                            setRecordStockDataPECompleteData((prevData) => {
+                                const newData = [
+                                    ...prevData,
+                                    { symbol: data.symbol, ltp: data.ltp, exch_feed_time: data.exch_feed_time, indian_time: indianTime }
+                                ];
+                                const filteredData = filterMinuteData(newData);
+                                setRecordStockDataPE(filteredData)
+                                return newData;
+                            });
+                        }
                     }
                 }
             });
@@ -98,7 +126,7 @@ const Page = () => {
     const fetchRealTimeData = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:5000/option-chain/all/${index || symbol}`);
+            const response = await fetch(`/marketfeed/option-chain/all/${index || symbol}`);
 
             if (!response.ok) {
                 throw new Error(`Failed to fetch data. HTTP error! Status: ${response.status}`);
@@ -124,7 +152,7 @@ const Page = () => {
     const fetchStrikePrices = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:5000/option-chain/strikes/${index || symbol}`);
+            const response = await fetch(`/marketfeed/option-chain/strikes/${index || symbol}`);
             const parsedData = await response.json();
             const strikePrices = parsedData;
             setStrikePrices(strikePrices);
@@ -137,7 +165,7 @@ const Page = () => {
     const fetchExpirydates = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:5000/option-chain/expiry/${index || symbol}`);
+            const response = await fetch(`/marketfeed/option-chain/expiry/${index || symbol}`);
             const parsedData = await response.json();
             const expirydates = parsedData;
             setexpiryDates(expirydates[0])
@@ -147,77 +175,6 @@ const Page = () => {
             setLoading(false);
             throw new Error('Error fetching strike prices');
         }
-    };
-    const fetchFuturesData = async () => {
-        // const response = await axios.get(`http://localhost:5000/api/v3/futures/${index || symbol}`);
-        // const futureSymbol = response.data.d[0].n;
-        // let socket;
-        // try {
-        //     socket = io('http://localhost:5000/futures');
-
-        //     socket.on('connect', () => {
-        //         console.log('Connected to socket server');
-        //         socket.emit('subscribeSymbolForFuture', futureSymbol);
-        //     });
-
-        //     socket.on('symbolData', (data) => {
-        //         if (data.code !== 200) {
-        //             console.log(data);
-        //             // setFuturesData((prevData) => [
-        //             //     ...prevData,
-        //             //     { ltp: data.ltp, exch_feed_time: data.exch_feed_time }
-        //             // ]);
-        //         }
-        //     });
-        //     return () => {
-        //         if (socket && socket.connected) {
-        //             socket.emit('disconnect');
-        //             socket.close();
-        //         }
-        //     };
-        // } catch (error) {
-        //     console.error(`Error fetching spot LTP: ${error.message}`);
-        //     if (socket && socket.connected) {
-        //         socket.close();
-        //     }
-        // }
-    };
-    const fetchCEData = async (value) => {
-        console.log("FetchCedata");
-        // const apiUrl = `http://localhost:5000/records/ce/${index || symbol}/${value}`;
-        // try {
-        //     const response = await fetch(apiUrl);
-        //     if (!response.ok) {
-        //         throw new Error(`Failed to fetch spot LTP. Status: ${response.status}`);
-        //     }
-        //     const parsedData = await response.json();
-        //     if (!parsedData || !parsedData.candles) {
-        //         throw new Error("Invalid data format received from the server");
-        //     }
-        //     setRecordStockDataCE(parsedData.candles);
-        //     // CeDivergenceFunction(); // Call CeDivergenceFunction here
-
-        // } catch (error) {
-        //     console.error(`Error fetching spot LTP: ${error.message}`);
-        // }
-    };
-    const fetchPEData = async (value) => {
-        console.log("FetchPedata");
-        // const apiUrl = `http://localhost:5000/records/pe/${index || symbol}/${value}`;
-        // try {
-        //     const response = await fetch(apiUrl);
-        //     if (!response.ok) {
-        //         throw new Error(`Failed to fetch spot LTP. Status: ${response.status}`);
-        //     }
-        //     const parsedData = await response.json();
-        //     if (!parsedData || !parsedData.candles) {
-        //         throw new Error("Invalid data format received from the server");
-        //     }
-        //     setRecordStockDataPE(parsedData.candles);
-        //     //  PedivergenceFunction();
-        // } catch (error) {
-        //     console.error(`Error fetching spot LTP: ${error.message}`);
-        // }
     };
     const handleIndexChange = (event) => {
         const newIndex = event.target.value;
@@ -239,7 +196,7 @@ const Page = () => {
     };
     const handleExpirydate = async (event) => {
         const eventValue = event.target.value;
-        const apiURL = `http://localhost:5000/option-chain/all/${index || symbol}/${eventValue}`;
+        const apiURL = `/marketfeed/option-chain/all/${index || symbol}/${eventValue}`;
         setselectedExpiryDate([eventValue]);
         setLoading(true);
 
@@ -268,7 +225,8 @@ const Page = () => {
         const eventValue = event.target.value;
         setSelectedStrikePrice([eventValue]);
         if (eventValue === '') {
-            clearSelectedStrikeStates()
+            setSelectedStrikePrice('')
+            clearAllStates();
         }
     };
     const handleTimeDurationChange = (event) => {
@@ -276,14 +234,21 @@ const Page = () => {
         setTimeUpdateDuration(parseInt(selectedTime));
     };
     function clearAllStates() {
+        setSpotLTPCompleteData([])
+        setSpotLTP([]);
+        setFuturesDataCompleteData([])
+        setFuturesData([])
         setStockDataCE([]);
         setStockDataPE([]);
-        setSpotLTP([]);
         setSelectedStrikePrice('');
         setRecordStockDataCE([]);
         setRecordStockDataPE([]);
+        setRecordStockDataCECompleteData([])
+        setRecordStockDataPECompleteData([])
     };
     function clearSelectedStrikeStates() {
+        setRecordStockDataCECompleteData([])
+        setRecordStockDataPECompleteData([])
         setRecordStockDataCE([]);
         setRecordStockDataPE([]);
         setSelectedStrikePrice('');
@@ -291,6 +256,34 @@ const Page = () => {
     function convertEpochToIndiaTime(epochTimestamp) {
         const epochMillis = epochTimestamp * 1000;
         const date = new Date(epochMillis);
+
+        // Check if the date is valid
+        if (isNaN(date.getTime())) {
+            // Date is not valid, return placeholder
+            return "---";
+        }
+
+        const options = {
+            timeZone: 'Asia/Kolkata',
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric',
+            hour12: true,
+        };
+        const indiaTime = date.toLocaleString('en-IN', options);
+
+        return indiaTime;
+    }
+    function convertEpochToIndiaTimeForTable(epochTimestamp) {
+        const epochMillis = epochTimestamp * 1000;
+        const date = new Date(epochMillis);
+
+
+        // Check if the date is valid
+        if (isNaN(date.getTime())) {
+            // Date is not valid, return placeholder
+            return "---";
+        }
         const options = {
             timeZone: 'Asia/Kolkata',
             hour: 'numeric',
@@ -300,7 +293,7 @@ const Page = () => {
         const indiaTime = date.toLocaleString('en-IN', options);
 
         return indiaTime;
-    };
+    }
     function formatEpochTimeToIST(epochTime) {
         const date = new Date(epochTime * 1000);
         const options = { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'long', year: 'numeric' };
@@ -371,8 +364,8 @@ const Page = () => {
         const divergence = ["--",];
 
         for (let i = 0; i < recordStockDataCE.length - 1; i++) {
-            const recordCe_first_value = recordStockDataCE[i][4];
-            const recordPe_second_valu = recordStockDataCE[i + 1][4];
+            const recordCe_first_value = recordStockDataCE[i]?.ltp;
+            const recordPe_second_valu = recordStockDataCE[i + 1]?.ltp;
             const differenceBetweenSpotLTP = parseFloat((recordPe_second_valu - recordCe_first_value).toFixed(2));
 
             if (differenceBetweenSpotLTP > 0) {
@@ -400,8 +393,8 @@ const Page = () => {
         const divergence = ["--",];
 
         for (let i = 0; i < recordStockDataPE.length - 1; i++) {
-            const recordspe_first_value = recordStockDataPE[i][4];
-            const recordspe_second_value = recordStockDataPE[i + 1][4];
+            const recordspe_first_value = recordStockDataPE[i]?.ltp;
+            const recordspe_second_value = recordStockDataPE[i + 1]?.ltp;
             const differenceBetweenSpotLTP = parseFloat((recordspe_second_value - recordspe_first_value).toFixed(2));
 
             if (differenceBetweenSpotLTP > 0) {
@@ -425,19 +418,19 @@ const Page = () => {
 
         setPeDivergencedata(divergence);
     };
+    function filterMinuteData(dataArray) {
+        return dataArray;
+    }
     useEffect(() => {
-        console.log("Rendering...1");
         const fetchDataAndUpdateMainData = async () => {
             if (selectedStrikePrice !== '') {
                 await Promise.all([
-                    fetchCEData(selectedStrikePrice),
-                    fetchPEData(selectedStrikePrice)
+                    fetchSpotLTP(),
                 ]);
             }
             const mainDataFunctions = async () => {
                 await Promise.all([
                     fetchSpotLTP(),
-                    fetchFuturesData(),
                     fetchRealTimeData(),
                     fetchExpirydates(),
                     fetchStrikePrices(),
@@ -448,15 +441,12 @@ const Page = () => {
 
         fetchDataAndUpdateMainData();
     }, [index, symbol, selectedStrikePrice]);
-
-    // useEffect(() => {
-    //     console.log("Rendering...2");
-    //     DivergenceData()
-    //     FutureDivergenceCalc()
-    //     // CeDivergenceFunction();
-    //     // PedivergenceFunction();
-    // }, [spotLTP, futuresData, recordStockDataCE, recordStockDataPE]);
-
+    useEffect(() => {
+        DivergenceData()
+        FutureDivergenceCalc()
+        CeDivergenceFunction();
+        PedivergenceFunction();
+    }, [spotLTP, futuresData, recordStockDataCE, recordStockDataPE]);
 
     return (
         <>
@@ -540,9 +530,9 @@ const Page = () => {
                                 </label>
                                 <select style={{ width: "153px" }} id="timeDropdown" className="border rounded p-2"
                                     value={timeUpdateDuration.toString()} onChange={handleTimeDurationChange}>
-                                    <option value="60000">1 Minute</option>
-                                    <option value="120000">2 Minute</option>
-                                    <option value="180000">3 Minute</option>
+                                    <option value="60">1 Minute</option>
+                                    <option value="120">2 Minute</option>
+                                    <option value="180">3 Minute</option>
                                 </select>
                             </div>
                         </div>
@@ -559,47 +549,89 @@ const Page = () => {
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto">
-                        <div className="table-container shadow-md rounded-md border bg-white">
-                            <div className="max-h-96 overflow-y-auto">
-                                <table className="table-auto w-full border bg-white shadow-md rounded-md">
-                                    <thead className="bg-gray-800 text-white sticky top-0 z-50">
-                                        <tr>
-                                            <th className="px-4 py-2 text-center border">Time</th>
-                                            <th className="px-4 py-2 text-center border">Spot/LTP</th>
-                                            {(recordStockDataCE || recordStockDataPE).length != 0 && <th className="px-4 py-2 text-center border">Spot Divergence</th>}
-                                            <th className="px-4 py-2 text-center border">Future Price</th>
-                                            {(recordStockDataCE || recordStockDataPE).length != 0 && <th className="px-4 py-2 text-center border">Future Divergence</th>}
-                                            {(recordStockDataCE || recordStockDataPE).length == 0 && <th className="px-4 py-2 text-center border">Strike</th>}
-                                            <th className="px-4 py-2 text-center border">CE/LTP</th>
-                                            {(recordStockDataCE || recordStockDataPE).length != 0 && <th className="px-4 py-2 text-center border">CE Divergence</th>}
-                                            <th className="px-4 py-2 text-center border">PE/LTP</th>
-                                            {(recordStockDataCE || recordStockDataPE).length != 0 && <th className="px-4 py-2 text-center border">PE Divergence</th>}
-                                        </tr>
-                                    </thead>
-                                    <tbody className="max-h-96 overflow-y-auto">
-                                        {spotLTP.map((value, index) => (
-                                            <tr key={index}>
-                                                <td className="px-4 py-2 text-center border">{convertEpochToIndiaTime(value.exch_feed_time)}</td>
-                                                <td className="px-4 py-2 text-center border">{value.ltp}</td>
-                                                {(recordStockDataCE || recordStockDataPE).length != 0 && <td className="px-4 py-2 text-center border">{Divergencedata[index]}</td>}
-                                                <td className="px-4 py-2 text-center border">{futuresData.length > 0 ? (futuresData[index]?.ltp) : 'Loading...'}</td>
-                                                {(recordStockDataCE || recordStockDataPE).length != 0 && <td className="px-4 py-2 text-center border">{futureDivergenceData[index]}</td>}
-                                                {(recordStockDataCE || recordStockDataPE).length == 0 && <td className="px-4 py-2 text-center border">{Array.isArray(strikePrices) && strikePrices.length > 0 ? strikePrices[index] : 'Loading...'}</td>}
-                                                <td className="px-4 py-2 text-center border">{recordStockDataCE.length == 0 ? stockDataCE[index]?.v.lp : (recordStockDataCE[index]?.[4])}</td>
-
-                                                {(recordStockDataCE.length > 0 && recordStockDataPE.length > 0) && <td className="px-4 py-2 text-center border">{CeDivergencedata[index]}</td>}
-
-                                                <td className="px-4 py-2 text-center border">{recordStockDataPE.length == 0 ? stockDataPE[index]?.v.lp : (recordStockDataPE[index]?.[4])}</td>
-
-                                                {(recordStockDataCE.length > 0 && recordStockDataPE.length > 0) && <td className="px-4 py-2 text-center border">{PeDivergencedata[index]}</td>}
+                    <div className="flex justify-between">
+                        <div className="overflow-x-auto flex-grow mr-2">
+                            <div className="table-container shadow-md rounded-md border bg-white">
+                                <div className="max-h-96 overflow-y-auto">
+                                    <table className="table-auto w-full border bg-white shadow-md rounded-md">
+                                        <thead className="bg-gray-800 text-white sticky top-0 z-50">
+                                            <tr>
+                                                <th className="px-4 py-2 text-center border min-w-24">Time</th>
+                                                <th className="px-4 py-2 text-center border min-w-24">Spot/LTP</th>
+                                                {(recordStockDataCE || recordStockDataPE).length != 0 && <th className="px-4 py-2 text-center border min-w-24">Spot Divergence</th>}
+                                                <th className="px-4 py-2 text-center border min-w-24">Future Price</th>
+                                                {(recordStockDataCE || recordStockDataPE).length != 0 && <th className="px-4 py-2 text-center border min-w-24">Future Divergence</th>}
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody className="max-h-96 overflow-y-auto">
+                                            {spotLTP.map((value, index) => (
+                                                <tr key={index}>
+                                                    <td className="px-4 py-2 text-center border">{convertEpochToIndiaTime(value.exch_feed_time)}</td>
+                                                    <td className="px-4 py-2 text-center border">{value.ltp}</td>
+                                                    {(recordStockDataCE || recordStockDataPE).length != 0 && <td className="px-4 py-2 text-center border">{Divergencedata[index]}</td>}
+                                                    <td className="px-4 py-2 text-center border">{futuresData.length > 0 ? (futuresData[index]?.ltp) : 'Loading...'}</td>
+                                                    {(recordStockDataCE || recordStockDataPE).length != 0 && <td className="px-4 py-2 text-center border">{futureDivergenceData[index]}</td>}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
+                        {selectedStrikePrice === '' && <div className="overflow-x-auto flex-grow ml-2">
+                            <div className="table-container shadow-md rounded-md border bg-white">
+                                <div className="max-h-96 overflow-y-auto">
+                                    <table className="table-auto w-full border bg-white shadow-md rounded-md">
+                                        <thead className="bg-gray-800 text-white sticky top-0 z-50">
+                                            <tr>
+                                                {(recordStockDataCE || recordStockDataPE).length == 0 && <th className="px-4 py-2 text-center border min-w-24">Strike</th>}
+                                                <th className="px-4 py-2 text-center border min-w-24">CE/LTP</th>
+                                                <th className="px-4 py-2 text-center border min-w-24">PE/LTP</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="max-h-96 overflow-y-auto">
+                                            {strikePrices.map((value, index) => (
+                                                <tr key={index}>
+                                                    {(recordStockDataCE || recordStockDataPE).length == 0 && <td className="px-4 py-2 text-center border">{Array.isArray(strikePrices) && strikePrices.length > 0 ? value : 'Loading...'}</td>}
+                                                    <td className="px-4 py-2 text-center border">{recordStockDataCE.length == 0 && stockDataCE[index]?.v.lp}</td>
+                                                    <td className="px-4 py-2 text-center border">{recordStockDataPE.length == 0 && stockDataPE[index]?.v.lp}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>}
+                        {selectedStrikePrice !== '' && <div className="overflow-x-auto flex-grow ml-2">
+                            <div className="table-container shadow-md rounded-md border bg-white">
+                                <div className="max-h-96 overflow-y-auto">
+                                    <table className="table-auto w-full border bg-white shadow-md rounded-md">
+                                        <thead className="bg-gray-800 text-white sticky top-0 z-50">
+                                            <tr>
+                                                <th className="px-4 py-2 text-center border min-w-24">Time</th>
+                                                <th className="px-4 py-2 text-center border min-w-24">CE/LTP</th>
+                                                {(recordStockDataCE || recordStockDataPE).length != 0 && <th className="px-4 py-2 text-center border min-w-24">CE Divergence</th>}
+                                                <th className="px-4 py-2 text-center border min-w-24">PE/LTP</th>
+                                                {(recordStockDataCE || recordStockDataPE).length != 0 && <th className="px-4 py-2 text-center border min-w-24">PE Divergence</th>}
+                                            </tr>
+                                        </thead>
+                                        <tbody className="max-h-96 overflow-y-auto">
+                                            {recordStockDataCE.map((value, index) => (
+                                                <tr key={index}>
+                                                    <td className="px-4 py-2 text-center border">{convertEpochToIndiaTime(value.exch_feed_time)}</td>
+                                                    <td className="px-4 py-2 text-center border">{recordStockDataCE.length !== 0 && (recordStockDataCE[index]?.ltp)}</td>
+                                                    {(recordStockDataCE.length > 0 && recordStockDataPE.length > 0) && <td className="px-4 py-2 text-center border">{CeDivergencedata[index]}</td>}
+                                                    <td className="px-4 py-2 text-center border">{recordStockDataPE.length !== 0 && (recordStockDataPE[index]?.ltp)}</td>
+                                                    {(recordStockDataCE.length > 0 && recordStockDataPE.length > 0) && <td className="px-4 py-2 text-center border">{PeDivergencedata[index]}</td>}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>}
                     </div>
+
 
                 </main>
                 <footer className="text-black mt-20">

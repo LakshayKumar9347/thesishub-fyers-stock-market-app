@@ -29,7 +29,7 @@ const Page = () => {
     const fetchRealTimeData = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:5000/option-chain/all/${index || symbol}`);
+            const response = await fetch(`/marketfeed/option-chain/all/${index || symbol}`);
 
             if (!response.ok) {
                 throw new Error(`Failed to fetch data. HTTP error! Status: ${response.status}`);
@@ -55,7 +55,7 @@ const Page = () => {
     const fetchStrikePrices = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:5000/option-chain/strikes/${index || symbol}/${selectedDate}`);
+            const response = await fetch(`/marketfeed/option-chain/strikes/${index || symbol}/${selectedDate}`);
             const parsedData = await response.json();
             const strikePrices = parsedData;
             setStrikePrices(strikePrices);
@@ -66,7 +66,7 @@ const Page = () => {
         }
     };
     const fetchSpotLTP = async () => {
-        const apiUrl = `http://localhost:5000/records/index/${index || symbol}/${selectedDate}`;
+        const apiUrl = `/marketfeed/records/index/${index || symbol}/${selectedDate}`;
         try {
             const response = await fetch(apiUrl);
             if (!response.ok) {
@@ -85,7 +85,7 @@ const Page = () => {
     };
     const fetchFuturesData = async () => {
         try {
-            const apiUrl = `http://localhost:5000/api/v3/ltp-future/${index || symbol}/${selectedDate}`;
+            const apiUrl = `/marketfeed/api/v3/ltp-future/${index || symbol}/${selectedDate}`;
             const response = await fetch(apiUrl);
 
             if (!response.ok) {
@@ -101,7 +101,7 @@ const Page = () => {
         }
     };
     const fetchCEData = async (value) => {
-        const apiUrl = `http://localhost:5000/records/ce/${index || symbol}/${value}/${selectedDate}`;
+        const apiUrl = `/marketfeed/records/ce/${index || symbol}/${value}/${selectedDate}`;
         try {
             const response = await fetch(apiUrl);
             if (!response.ok) {
@@ -119,7 +119,7 @@ const Page = () => {
         }
     };
     const fetchPEData = async (value) => {
-        const apiUrl = `http://localhost:5000/records/pe/${index || symbol}/${value}/${selectedDate}`;
+        const apiUrl = `/marketfeed/records/pe/${index || symbol}/${value}/${selectedDate}`;
         try {
             const response = await fetch(apiUrl);
             if (!response.ok) {
