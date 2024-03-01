@@ -22,6 +22,13 @@ const port = 5000;
 const fs = require('fs')
 const path = require('path')
 const { exec } = require('child_process');
+// const FyersAPI = require('fyers-api-v3');
+// const fyers = new FyersAPI.fyersModel();
+// fyers.setAppId(process.env.APP_ID);
+// fyers.setRedirectUrl('https://www.rgstartup.com/');
+// fyers.setAccessToken(process.env.ACCESS_TOKEN);
+
+
 // Using Cors
 app.use(cors({
     origin: "http://localhost:3000"
@@ -94,8 +101,35 @@ async function createFyersSocket() {
         throw error;
     }
 }
-createFyersSocket().then((fyersdata) => {
+// Under Developing Logic when Auth Token Expires
+app.get('/emer/authorize', (req, res) => {
+    const generateAuthcodeURL = fyers.generateAuthCode();
+    console.log(generateAuthcodeURL);
+    res.redirect(generateAuthcodeURL);
+});
+app.get('/gency/authenticate', async (req, res) => {
+    try {
+        const authCode = process.env.AUTH_TOKEN;
+        console.log(process.env.AUTH_TOKEN);
+        const secretKey = process.env.SECRET_KEY;
 
+        const response = await fyers.generate_access_token({
+            secret_key: secretKey,
+            auth_code: authCode,
+        });
+
+        console.log(response);
+        if (response.code === 200) {
+            res.send('Access Token generated');
+        } else {
+            res.status(response.code).send(response.message);
+        }
+    } catch (error) {
+        handleFyersError(res, error);
+    }
+});
+// Under Developing Logic when Auth Token Expires
+createFyersSocket().then((fyersdata) => {
     // Main Api Routes
     app.use('/db', require('./routes/db-routes')); // This is For Historical Stock data Page 
     app.use('/api/v3', require('./routes/index')); // Give Status,Ticker,Futures,Future-LTP
@@ -105,7 +139,6 @@ createFyersSocket().then((fyersdata) => {
         res.send("Welcome to Stock Monitoring Server");
         console.log("Welcome Mr. Lakshay")
     });
-
     io.on('connection', (socket) => {
         // All the Symbols
         const stockSymbols = {
@@ -128,7 +161,7 @@ createFyersSocket().then((fyersdata) => {
         let subscribedSymbols = [];
 
         function onmsg(message) {
-            console.log(message);
+            // console.log(message);
             socket.emit('symbolData', message);
         }
 
@@ -138,7 +171,7 @@ createFyersSocket().then((fyersdata) => {
         }
 
         function onerror(err) {
-            console.log("This is onerror", err);
+            console.log(err);
         }
 
         function onclose() {
@@ -180,8 +213,9 @@ createFyersSocket().then((fyersdata) => {
         fyersdata.connect();
     });
 
+}).catch((err) => {
+    console.log("Not Able To Create fyers Socket :)");
 })
-
 // Server Up & Running
 server.listen(port, () => {
     console.log(`Server Live At Port ${port}.`);

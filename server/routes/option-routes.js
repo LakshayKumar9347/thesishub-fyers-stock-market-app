@@ -99,7 +99,9 @@ function getNextExpiryDates(symbols) {
     function getNextWeekday(date, dayIndex) {
         const result = new Date(date);
         result.setDate(date.getDate() + (dayIndex + 7 - date.getDay()) % 7);
-        return { month: result.toLocaleString('default', { month: 'short' }), day: result.getDate() };
+        const month = result.toLocaleString('default', { month: 'short' });
+        const day = result.getDate().toString().padStart(2, '0'); // Ensure day is two digits with leading zeros
+        return { month, day };
     }
 
     for (const symbol of symbols) {
@@ -138,8 +140,9 @@ function getNextExpiryDates(symbols) {
 
         const symbolExpiryDates = [];
         for (let i = 0; i < 5; i++) {
-            const expiryDate = new Date(today.getFullYear(), today.getMonth(), day + (i * 7));
-            symbolExpiryDates.push(`${expiryDate.getDate()}-${expiryDate.toLocaleString('default', { month: 'short' })}-${expiryDate.getFullYear()}`);
+            const expiryDate = new Date(today.getFullYear(), today.getMonth(), parseInt(day) + (i * 7)); // ParseInt to avoid treating as octal if day starts with '0'
+            const dayWithLeadingZero = expiryDate.getDate().toString().padStart(2, '0'); // Ensure day is two digits with leading zeros
+            symbolExpiryDates.push(`${dayWithLeadingZero}-${month}-${expiryDate.getFullYear()}`);
         }
 
         expiryDates.push(symbolExpiryDates);
@@ -147,6 +150,7 @@ function getNextExpiryDates(symbols) {
 
     return expiryDates;
 }
+
 function calculateRoundedLTP(ltp, symbol) {
     let gap;
     if (ltp && symbol) {
@@ -180,7 +184,7 @@ function generateStrikePrices(roundLTP, totalStrikePrices, symbol, date = '') {
         nextWeekday.setDate(date.getDate() + daysUntilNextWeekday);
 
         const month = Number((nextWeekday.getMonth() + 1).toString().padStart(2, '0'));
-        const day = Number(nextWeekday.getDate().toString().padStart(2, '0'));
+        const day =nextWeekday.getDate().toString().padStart(2, '0');
         return { month, day };
     }
     function getLastWeekdayOfMonth(date, dayIndex) {
@@ -194,7 +198,7 @@ function generateStrikePrices(roundLTP, totalStrikePrices, symbol, date = '') {
         lastWeekday.setDate(lastDayOfMonth.getDate() + daysUntilLastWeekday);
 
         const month = Number((lastWeekday.getMonth() + 1).toString().padStart(2, '0'));
-        const day = Number(lastWeekday.getDate().toString().padStart(2, '0'));
+        const day = lastWeekday.getDate().toString().padStart(2, '0');
 
         return { month, day };
     }
@@ -255,11 +259,13 @@ function generateStrikePrices(roundLTP, totalStrikePrices, symbol, date = '') {
                 alpaMonth = currentDate.toLocaleString('default', { month: 'short' }).toUpperCase();
                 break;
         }
+
+
         const [inputDay, inputMonth, inputYear] = date.split('-');
-        const UserInputday = Number(inputDay.padStart(2, '0'));
+        const UserInputday = inputDay.padStart(2, '0');
         const UserInputMonth = Number((new Date(Date.parse(`${inputMonth} 1, 2000`)).getMonth() + 1).toString().padStart(2, '0'));
         const UserInputYear = Number(inputYear.slice(-2));
-
+        // console.log(inputDay, inputMonth, inputYear);
         if (UserInputday === day) {
             day = 69;
             year = UserInputYear;
@@ -343,7 +349,9 @@ function generateStrikePrices(roundLTP, totalStrikePrices, symbol, date = '') {
                 alpaMonth = new Date().toLocaleString('default', { month: 'short' }).toUpperCase();
                 day = 69
                 break;
+
         }
+        // console.log(month, day);
     }
 
     let monthShort;
@@ -382,7 +390,7 @@ function generateStrikePricesSingle(roundLTP, totalStrikePrices, symbol) {
         nextWeekday.setDate(date.getDate() + daysUntilNextWeekday);
 
         const month = Number((nextWeekday.getMonth() + 1).toString().padStart(2, '0'));
-        const day = Number(nextWeekday.getDate().toString().padStart(2, '0'));
+        const day = nextWeekday.getDate().toString().padStart(2, '0');
         return { month, day };
     }
     function getLastWeekdayOfMonth(date, dayIndex) {
@@ -396,7 +404,7 @@ function generateStrikePricesSingle(roundLTP, totalStrikePrices, symbol) {
         lastWeekday.setDate(lastDayOfMonth.getDate() + daysUntilLastWeekday);
 
         const month = Number((lastWeekday.getMonth() + 1).toString().padStart(2, '0'));
-        const day = Number(lastWeekday.getDate().toString().padStart(2, '0'));
+        const day = lastWeekday.getDate().toString().padStart(2, '0');
 
         return { month, day };
     }
@@ -427,7 +435,7 @@ function generateStrikePricesSingle(roundLTP, totalStrikePrices, symbol) {
     };
     const gap = symbolConfig[symbol];
     const currentDate = new Date();
-    let day, month, alpaMonth 
+    let day, month, alpaMonth
     let nextWeekdayResult, lastWeekdayOfMonthResult;
 
     switch (symbol) {
