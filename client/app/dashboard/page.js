@@ -50,7 +50,7 @@ const Page = () => {
             PeStrikeSymbol = OptionsResponse.data.d[1].n
         }
         try {
-            const socket = io('https://thesishub.in/marketfeed', {
+            const socket = io('http://localhost:5000', {
                 path: '/socket.io',
             });
 
