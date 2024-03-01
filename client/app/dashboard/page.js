@@ -37,7 +37,7 @@ const Page = () => {
     // Mai Function Which Fetch Data from Server
     const fetchSpotLTP = async () => {
         let socket;
-        const futuresResponse = await axios.get(`http://localhost:5000/api/v3/futures/${index || symbol}`);
+        const futuresResponse = await axios.get(`/marketfeed/api/v3/futures/${index || symbol}`);
         const futureSymbol = futuresResponse.data.d[0].n;
         let OptionsResponse, CeStrikeSymbol, PeStrikeSymbol
         if (selectedStrikePrice !== '') {
@@ -45,12 +45,12 @@ const Page = () => {
             setRecordStockDataPECompleteData([])
             setRecordStockDataCE([])
             setRecordStockDataPE([])
-            OptionsResponse = await axios.get(`http://localhost:5000/option-chain/single-strike/${index || symbol}/${selectedStrikePrice}`)
+            OptionsResponse = await axios.get(`/marketfeed/option-chain/single-strike/${index || symbol}/${selectedStrikePrice}`)
             CeStrikeSymbol = OptionsResponse.data.d[0].n
             PeStrikeSymbol = OptionsResponse.data.d[1].n
         }
         try {
-            const socket = io('http://localhost:5000', {
+            const socket = io('https://thesishub.in/marketfeed', {
                 path: '/socket.io',
             });
 
@@ -126,7 +126,7 @@ const Page = () => {
     const fetchRealTimeData = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:5000/option-chain/all/${index || symbol}`);
+            const response = await fetch(`/marketfeed/option-chain/all/${index || symbol}`);
 
             if (!response.ok) {
                 throw new Error(`Failed to fetch data. HTTP error! Status: ${response.status}`);
@@ -152,7 +152,7 @@ const Page = () => {
     const fetchStrikePrices = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:5000/option-chain/strikes/${index || symbol}`);
+            const response = await fetch(`/marketfeed/option-chain/strikes/${index || symbol}`);
             const parsedData = await response.json();
             const strikePrices = parsedData;
             setStrikePrices(strikePrices);
@@ -165,7 +165,7 @@ const Page = () => {
     const fetchExpirydates = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:5000/option-chain/expiry/${index || symbol}`);
+            const response = await fetch(`/marketfeed/option-chain/expiry/${index || symbol}`);
             const parsedData = await response.json();
             const expirydates = parsedData;
             setexpiryDates(expirydates[0])
@@ -196,7 +196,7 @@ const Page = () => {
     };
     const handleExpirydate = async (event) => {
         const eventValue = event.target.value;
-        const apiURL = `http://localhost:5000/option-chain/all/${index || symbol}/${eventValue}`;
+        const apiURL = `/marketfeed/option-chain/all/${index || symbol}/${eventValue}`;
         setselectedExpiryDate([eventValue]);
         setLoading(true);
 
