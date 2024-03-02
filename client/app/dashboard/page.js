@@ -418,46 +418,46 @@ const Page = () => {
 
         setPeDivergencedata(divergence);
     };
-    // function filterMinuteData(dataArray, filterInterval) {
-    //     console.log("Filter Minute Data time interval: ", filterInterval);
-    //     if (dataArray.length === 0) return [];
-
-    //     const intervals = {
-    //         '30s': 30,
-    //         '1m': 60,
-    //         '2m': 120,
-    //         '3m': 180
-    //     };
-
-    //     if (!intervals.hasOwnProperty(filterInterval)) {
-    //         console.error("Invalid filter interval. It must be one of: '30s', '1m', '2m', '3m'.");
-    //         return [];
-    //     }
-
-    //     const intervalSeconds = intervals[filterInterval];
-    //     let filteredData = [];
-
-    //     for (let i = 0; i < dataArray.length; i++) {
-    //         const currentTime = dataArray[i].indian_time.split(":");
-    //         const currentMinutes = parseInt(currentTime[1]);
-    //         const currentSeconds = parseInt(currentTime[2].split(" ")[0]);
-
-    //         if (
-    //             (filterInterval === '30s' && (currentSeconds === 0 || currentSeconds === 30)) ||
-    //             (filterInterval === '1m' && currentSeconds === 0) ||
-    //             (filterInterval === '2m' && currentSeconds === 0 && currentMinutes % 2 === 0) ||
-    //             (filterInterval === '3m' && currentSeconds === 0 && currentMinutes % 3 === 0)
-    //         ) {
-    //             filteredData.push(dataArray[i]);
-    //         }
-    //     }
-
-    //     return filteredData;
-    // }
     function filterMinuteData(dataArray, filterInterval) {
         console.log("Filter Minute Data time interval: ", filterInterval);
-        return dataArray;
+        if (dataArray.length === 0) return [];
+
+        const intervals = {
+            '30s': 30,
+            '1m': 60,
+            '2m': 120,
+            '3m': 180
+        };
+
+        if (!intervals.hasOwnProperty(filterInterval)) {
+            console.error("Invalid filter interval. It must be one of: '30s', '1m', '2m', '3m'.");
+            return [];
+        }
+
+        const intervalSeconds = intervals[filterInterval];
+        let filteredData = [];
+
+        for (let i = 0; i < dataArray.length; i++) {
+            const currentTime = dataArray[i].indian_time.split(":");
+            const currentMinutes = parseInt(currentTime[1]);
+            const currentSeconds = parseInt(currentTime[2].split(" ")[0]);
+
+            if (
+                (filterInterval === '30s' && (currentSeconds === 0 || currentSeconds === 30)) ||
+                (filterInterval === '1m' && currentSeconds === 0) ||
+                (filterInterval === '2m' && currentSeconds === 0 && currentMinutes % 2 === 0) ||
+                (filterInterval === '3m' && currentSeconds === 0 && currentMinutes % 3 === 0)
+            ) {
+                filteredData.push(dataArray[i]);
+            }
+        }
+
+        return filteredData;
     }
+    // function filterMinuteData(dataArray, filterInterval) {
+    //     console.log("Filter Minute Data time interval: ", filterInterval);
+    //     return dataArray;
+    // }
     useEffect(() => {
         const fetchDataAndUpdateMainData = async () => {
             if (selectedStrikePrice !== '') {
