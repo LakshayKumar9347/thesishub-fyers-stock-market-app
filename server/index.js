@@ -9,6 +9,7 @@ const handleFyersError = require('./utils');
 dotenv.config();
 const axios = require('axios')
 const jwt = require('jsonwebtoken')
+const cron = require('node-cron'); // Import node-cron
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server, {
@@ -22,21 +23,26 @@ const port = 5000;
 const fs = require('fs')
 const path = require('path')
 const { exec } = require('child_process');
-// const FyersAPI = require('fyers-api-v3');
-// const fyers = new FyersAPI.fyersModel();
-// fyers.setAppId(process.env.APP_ID);
-// fyers.setRedirectUrl('https://www.rgstartup.com/');
-// fyers.setAccessToken(process.env.ACCESS_TOKEN);
+const FyersAPI = require('fyers-api-v3');
+const fyers = new FyersAPI.fyersModel();
+fyers.setAppId(process.env.APP_ID);
+fyers.setRedirectUrl('https://www.rgstartup.com/');
+fyers.setAccessToken(process.env.ACCESS_TOKEN);
 
-
+// Node Cron Restart scheduled
+cron.schedule('0 0 5 * * *', () => {
+    console.log('Restarting server at 5:00 AM IST...');
+    restartServer(); // Assuming restartServer is your function to restart the server
+}, {
+    scheduled: true,
+    timezone: "Asia/Kolkata"
+});
 // Using Cors
 app.use(cors({
     origin: "http://localhost:3000"
 }));
-
 // Establishing Database Connection
 connectDB();
-
 // Fyers Token Generating Process
 async function refreshAccessToken() {
     try {
@@ -128,7 +134,7 @@ app.get('/gency/authenticate', async (req, res) => {
         handleFyersError(res, error);
     }
 });
-// Under Developing Logic when Auth Token Expires
+// Socket Config
 createFyersSocket().then((fyersdata) => {
     // Main Api Routes
     app.use('/db', require('./routes/db-routes')); // This is For Historical Stock data Page 
