@@ -30,9 +30,20 @@ fyers.setRedirectUrl('https://www.rgstartup.com/');
 fyers.setAccessToken(process.env.ACCESS_TOKEN);
 
 // Node Cron Restart scheduled
+// Schedule the task to run at 5:00 AM IST every day
 cron.schedule('0 0 5 * * *', () => {
     console.log('Restarting server at 5:00 AM IST...');
-    restartServer(); // Assuming restartServer is your function to restart the server
+    // Execute the pm2 reload command
+    exec('pm2 reload 0', (error, stdout, stderr) => {
+        if (error) {
+            console.error(`exec error: ${error}`);
+            return;
+        }
+        console.log(`stdout: ${stdout}`);
+        if (stderr) {
+            console.log(`stderr: ${stderr}`);
+        }
+    });
 }, {
     scheduled: true,
     timezone: "Asia/Kolkata"
