@@ -177,7 +177,7 @@ createFyersSocket().then((fyersdata) => {
         let subscribedSymbols = [];
 
         function onmsg(message) {
-            // console.log(message);
+            console.log(message);
             socket.emit('symbolData', message);
         }
 
