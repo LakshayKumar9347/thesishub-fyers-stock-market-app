@@ -476,6 +476,7 @@ const Page = () => {
             const mainDataFunctions = async () => {
                 await Promise.all([
                     fetchSpotLTP(),
+                    filterMinuteData(),
                     fetchRealTimeData(),
                     fetchExpirydates(),
                     fetchStrikePrices(),
