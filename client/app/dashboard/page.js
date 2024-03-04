@@ -421,7 +421,7 @@ const Page = () => {
     };
     function filterMinuteData(dataArray, filterInterval) {
         console.log("Filter Minute Data time interval: ", filterInterval);
-        if (dataArray.length === 0) return [];
+        // if (dataArray.length === 0) return [];
 
         const intervals = {
             '10s': 10, // Added 10 seconds interval
