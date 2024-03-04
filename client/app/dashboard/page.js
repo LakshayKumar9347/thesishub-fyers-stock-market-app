@@ -628,14 +628,15 @@ const Page = () => {
                                             </tr>
                                         </thead>
                                         <tbody className="max-h-96 overflow-y-auto">
-                                            {strikePrices.map((value, index) => (
+                                            {Array.isArray(strikePrices) ? strikePrices.map((value, index) => (
                                                 <tr key={index}>
                                                     {(recordStockDataCE || recordStockDataPE).length == 0 && <td className="px-4 py-2 text-center border">{Array.isArray(strikePrices) && strikePrices.length > 0 ? value : 'Loading...'}</td>}
                                                     <td className="px-4 py-2 text-center border">{recordStockDataCE.length == 0 && stockDataCE[index]?.v.lp}</td>
                                                     <td className="px-4 py-2 text-center border">{recordStockDataPE.length == 0 && stockDataPE[index]?.v.lp}</td>
                                                 </tr>
-                                            ))}
+                                            )) : <tr><td></td></tr>}
                                         </tbody>
+
                                     </table>
                                 </div>
                             </div>
