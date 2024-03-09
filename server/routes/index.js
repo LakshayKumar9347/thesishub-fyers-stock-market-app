@@ -97,6 +97,34 @@ router.get('/status', (req, res) => {
         console.log(error)
     })
 })
+router.get('/price/:symbol', (req, res) => {
+    const symbol = req.params.symbol.toLowerCase()
+    const stockSymbols = {
+        'nifty': 'NSE:NIFTY50-INDEX',
+        'banknifty': 'NSE:NIFTYBANK-INDEX',
+        'sensex': 'BSE:SENSEX-INDEX',
+        'finnifty': 'NSE:FINNIFTY-INDEX',
+        'midcpnifty': 'NSE:MIDCPNIFTY-INDEX',
+        'bankex': 'BSE:BANKEX-INDEX',
+        'reliance': 'NSE:RELIANCE-EQ',
+        'bajfinance': 'NSE:BAJFINANCE-EQ',
+        'hdfcbank': 'NSE:HDFCBANK-EQ',
+        'sbin': 'NSE:SBIN-EQ',
+        'axisbank': 'NSE:AXISBANK-EQ',
+        'icicibank': 'NSE:ICICIBANK-EQ',
+        'infy': 'NSE:INFY-EQ',
+        'tcs': 'NSE:TCS-EQ',
+    };
+    var inp = [stockSymbols[symbol]]
+    // console.log(inp);
+    // res.send(inp)
+    fyers.getQuotes(inp).then((response) => {
+        // console.log(response)
+        res.send(response)
+    }).catch((error) => {
+        console.log(error)
+    })
+})
 router.get('/ticker/:symbol/:userdate?', async (req, res) => {
     const validSymbols = ['nifty', 'banknifty', 'sensex', 'finnifty', 'midcpnifty', 'bankex', 'reliance', 'bajfinance', 'hdfcbank', 'sbin', 'axisbank', 'icicibank', 'infy', 'tcs'];
     const userdate = req.params.userdate;

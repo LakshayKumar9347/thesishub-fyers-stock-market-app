@@ -60,14 +60,20 @@ router.get('/single-strike/:symbol/:strike', async (req, res) => {
 });
 // It Generates Numerics Strikes
 router.get('/strikes/:symbol/:userdate?', async (req, res) => {
-    const validStockSymbols = ['nifty', 'banknifty', 'sensex', 'finnifty', 'midcpnifty', 'bankex', 'reliance', 'bajfinance', 'hdfcbank', 'sbin', 'axisbank', 'icicibank', 'infy', 'tcs'];
     const symbol = req.params.symbol.toLowerCase();
     const userdate = req.params.userdate;
-    let date;
+    const validStockSymbols = ['nifty', 'banknifty', 'sensex', 'finnifty', 'midcpnifty', 'bankex', 'reliance', 'bajfinance', 'hdfcbank', 'sbin', 'axisbank', 'icicibank', 'infy', 'tcs'];
+    if (!validStockSymbols.includes(symbol)) {
+        return res.status(400).json({ error: 'Invalid stock symbol' });
+    }
+    let date, tickerEndpoint;
     if (userdate) {
         date = new Date(`${userdate}`)
+        const formattedDate = formatDate(date);
+        tickerEndpoint = `${process.env.MAIN_URL}/api/v3/ticker/${symbol}/${formattedDate}`
     } else {
         date = new Date()
+        tickerEndpoint = `http://localhost:5000/api/v3/price/${symbol}`
     }
     const dayOfWeek = date.getDay();
     if (dayOfWeek === 0) { // Sunday
@@ -75,14 +81,15 @@ router.get('/strikes/:symbol/:userdate?', async (req, res) => {
     } else if (dayOfWeek === 6) { // Saturday
         date.setDate(date.getDate() - 1);
     }
-    const formattedDate = formatDate(date);
-    if (!validStockSymbols.includes(symbol)) {
-        return res.status(400).json({ error: 'Invalid stock symbol' });
-    }
-    const tickerEndpoint = `${process.env.MAIN_URL}/api/v3/ticker/${symbol}/${formattedDate}`;//userdate modifies in ticker
+
     try {
+        let ltp;
         const tickerResponse = await axios.get(tickerEndpoint);
-        const ltp = tickerResponse.data.candles[0][4];
+        if (userdate) {
+            ltp = tickerResponse.data.candles[0][4];
+        } else {
+            ltp = tickerResponse.data.d[0].v.lp;
+        }
         const roundedLTP = calculateRoundedLTP(ltp, symbol);
         const totalStrikePrices = 4;
         const strikePrices = generateStrikePricesNumeric(roundedLTP, totalStrikePrices, symbol);
@@ -91,6 +98,7 @@ router.get('/strikes/:symbol/:userdate?', async (req, res) => {
         res.status(500).json({ error: 'Error fetching last traded price' });
     }
 });
+
 // Generate next Expiry Dates
 function getNextExpiryDates(symbols) {
     const today = new Date();
@@ -100,7 +108,7 @@ function getNextExpiryDates(symbols) {
         const result = new Date(date);
         result.setDate(date.getDate() + (dayIndex + 7 - date.getDay()) % 7);
         const month = result.toLocaleString('default', { month: 'short' });
-        const day = result.getDate().toString().padStart(2, '0'); // Ensure day is two digits with leading zeros
+        const day = result.getDate().toString().padStart(2, '0');
         return { month, day };
     }
 
@@ -127,30 +135,34 @@ function getNextExpiryDates(symbols) {
                 break;
             default:
                 const lastThursdays = [];
-                for (let i = 1; i <= 5; i++) {
-                    const nextMonth = new Date(today.getFullYear(), today.getMonth() + i, 1);
+                const currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                for (let i = 0; i < 5; i++) {
+                    const nextMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + i, 1);
                     const lastDayOfMonth = new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0);
                     const lastThursday = new Date(lastDayOfMonth);
                     lastThursday.setDate(lastDayOfMonth.getDate() - (lastDayOfMonth.getDay() + 7 - 4) % 7);
                     lastThursdays.push(`${lastThursday.getDate()}-${lastThursday.toLocaleString('default', { month: 'short' })}-${lastThursday.getFullYear()}`);
                 }
                 expiryDates.push(lastThursdays);
-                continue; // Skip to the next symbol
+                continue;
         }
 
         const symbolExpiryDates = [];
         for (let i = 0; i < 5; i++) {
-            const expiryDate = new Date(today.getFullYear(), today.getMonth(), parseInt(day) + (i * 7)); // ParseInt to avoid treating as octal if day starts with '0'
-            const dayWithLeadingZero = expiryDate.getDate().toString().padStart(2, '0'); // Ensure day is two digits with leading zeros
-            symbolExpiryDates.push(`${dayWithLeadingZero}-${month}-${expiryDate.getFullYear()}`);
+            const expiryDateCurrentMonth = new Date(today.getFullYear(), today.getMonth(), parseInt(day) + (i * 7)); // ParseInt to avoid treating as octal if day starts with '0'
+            const dayWithLeadingZeroCurrentMonth = expiryDateCurrentMonth.getDate().toString().padStart(2, '0'); // Ensure day is two digits with leading zeros
+            const monthCurrentMonth = expiryDateCurrentMonth.toLocaleString('default', { month: 'short' });
+            symbolExpiryDates.push(`${dayWithLeadingZeroCurrentMonth}-${monthCurrentMonth}-${expiryDateCurrentMonth.getFullYear()}`);
         }
-
+        // const expiryDateNextMonth = new Date(today.getFullYear(), today.getMonth() + 1, parseInt(day));
+        // const dayWithLeadingZeroNextMonth = expiryDateNextMonth.getDate().toString().padStart(2, '0');
+        // const monthNextMonth = expiryDateNextMonth.toLocaleString('default', { month: 'short' });
+        // console.log(symbolExpiryDates);
+        // symbolExpiryDates.push(`${dayWithLeadingZeroNextMonth}-${monthNextMonth}-${expiryDateNextMonth.getFullYear()}`);
         expiryDates.push(symbolExpiryDates);
     }
-
     return expiryDates;
 }
-
 function calculateRoundedLTP(ltp, symbol) {
     let gap;
     if (ltp && symbol) {
@@ -184,7 +196,7 @@ function generateStrikePrices(roundLTP, totalStrikePrices, symbol, date = '') {
         nextWeekday.setDate(date.getDate() + daysUntilNextWeekday);
 
         const month = Number((nextWeekday.getMonth() + 1).toString().padStart(2, '0'));
-        const day =nextWeekday.getDate().toString().padStart(2, '0');
+        const day = nextWeekday.getDate().toString().padStart(2, '0');
         return { month, day };
     }
     function getLastWeekdayOfMonth(date, dayIndex) {

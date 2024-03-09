@@ -37,7 +37,23 @@ const Page = () => {
     // Mai Function Which Fetch Data from Server
     const fetchSpotLTP = async () => {
         let socket;
-        const futuresResponse = await axios.get(`/marketfeed/api/v3/futures/${index || symbol}`);
+        const indexMapping = {
+            'nifty': 'NSE:NIFTY50-INDEX',
+            'banknifty': 'NSE:NIFTYBANK-INDEX',
+            'sensex': 'BSE:SENSEX-INDEX',
+            'finnifty': 'NSE:FINNIFTY-INDEX',
+            'midcpnifty': 'NSE:MIDCPNIFTY-INDEX',
+            'bankex': 'BSE:BANKEX-INDEX',
+            'reliance': 'NSE:RELIANCE-EQ',
+            'bajfinance': 'NSE:BAJFINANCE-EQ',
+            'hdfcbank': 'NSE:HDFCBANK-EQ',
+            'sbin': 'NSE:SBIN-EQ',
+            'axisbank': 'NSE:AXISBANK-EQ',
+            'icicibank': 'NSE:ICICIBANK-EQ',
+            'infy': 'NSE:INFY-EQ',
+            'tcs': 'NSE:TCS-EQ',
+        };
+        const futuresResponse = await axios.get(`http://localhost:5000/api/v3/futures/${index || symbol}`);
         const futureSymbol = futuresResponse.data.d[0].n;
         let OptionsResponse, CeStrikeSymbol, PeStrikeSymbol
         if (selectedStrikePrice !== '') {
@@ -45,17 +61,17 @@ const Page = () => {
             setRecordStockDataPECompleteData([])
             setRecordStockDataCE([])
             setRecordStockDataPE([])
-            OptionsResponse = await axios.get(`/marketfeed/option-chain/single-strike/${index || symbol}/${selectedStrikePrice}`)
+            OptionsResponse = await axios.get(`http://localhost:5000/option-chain/single-strike/${index || symbol}/${selectedStrikePrice}`)
             CeStrikeSymbol = OptionsResponse.data.d[0].n
             PeStrikeSymbol = OptionsResponse.data.d[1].n
         }
         try {
-            const socket = io('https://thesishub.in', {
+            const socket = io('http://localhost:5000', {
                 path: '/socket.io',
             });
 
             socket.on('connect', async () => {
-                socket.emit('SpotLTPData', index || symbol);
+                socket.emit('SpotLTPData', indexMapping[index || symbol]);
                 socket.emit('FutureLTPData', futureSymbol);
                 if (selectedStrikePrice !== '') {
                     socket.emit('OptionSymbolData', [CeStrikeSymbol, PeStrikeSymbol]);
@@ -75,7 +91,7 @@ const Page = () => {
                             return newData;
                         });
                     }
-                    else if (data.symbol !== futureSymbol && data.symbol !== CeStrikeSymbol && data.symbol !== PeStrikeSymbol) {
+                    else if (data.symbol === indexMapping[index || symbol]) {
                         setSpotLTPCompleteData((prevData) => {
                             const newData = [
                                 ...prevData,
@@ -127,7 +143,7 @@ const Page = () => {
     const fetchRealTimeData = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`/marketfeed/option-chain/all/${index || symbol}`);
+            const response = await fetch(`http://localhost:5000/option-chain/all/${index || symbol}`);
 
             if (!response.ok) {
                 throw new Error(`Failed to fetch data. HTTP error! Status: ${response.status}`);
@@ -153,7 +169,7 @@ const Page = () => {
     const fetchStrikePrices = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`/marketfeed/option-chain/strikes/${index || symbol}`);
+            const response = await fetch(`http://localhost:5000/option-chain/strikes/${index || symbol}`);
             const parsedData = await response.json();
             const strikePrices = parsedData;
             setStrikePrices(strikePrices);
@@ -166,7 +182,7 @@ const Page = () => {
     const fetchExpirydates = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`/marketfeed/option-chain/expiry/${index || symbol}`);
+            const response = await fetch(`http://localhost:5000/option-chain/expiry/${index || symbol}`);
             const parsedData = await response.json();
             const expirydates = parsedData;
             setexpiryDates(expirydates[0])
@@ -197,7 +213,7 @@ const Page = () => {
     };
     const handleExpirydate = async (event) => {
         const eventValue = event.target.value;
-        const apiURL = `/marketfeed/option-chain/all/${index || symbol}/${eventValue}`;
+        const apiURL = `http://localhost:5000/option-chain/all/${index || symbol}/${eventValue}`;
         setselectedExpiryDate([eventValue]);
         setLoading(true);
 
@@ -419,52 +435,56 @@ const Page = () => {
 
         setPeDivergencedata(divergence);
     };
+    // function filterMinuteData(dataArray, filterInterval) {
+    //     console.log("Filtering Data Time Interval: ", filterInterval);
+    //     // if (dataArray.length === 0) return [];
+
+    //     const intervals = {
+    //         '10s': 10, // Added 10 seconds interval
+    //         '30s': 30,
+    //         '1m': 60,
+    //         '2m': 120,
+    //         '3m': 180
+    //     };
+
+    //     if (!intervals.hasOwnProperty(filterInterval)) {
+    //         console.error("Invalid filter interval. It must be one of: '10s', '30s', '1m', '2m', '3m'.");
+    //         return [];
+    //     }
+
+    //     const intervalSeconds = intervals[filterInterval];
+    //     let filteredData = [];
+
+    //     // Ensure the first value is always included
+    //     if (dataArray.length > 0) {
+    //         filteredData.push(dataArray[0]);
+    //     }
+
+    //     for (let i = 1; i < dataArray.length; i++) { // Start from the second item
+    //         const currentTime = dataArray[i].indian_time.split(":");
+    //         const currentHours = parseInt(currentTime[0]);
+    //         const currentMinutes = parseInt(currentTime[1]);
+    //         const currentSeconds = parseInt(currentTime[2].split(" ")[0]);
+
+    //         // Calculate total seconds to simplify comparisons
+    //         const totalSeconds = currentHours * 3600 + currentMinutes * 60 + currentSeconds;
+
+    //         // The logic for '10s' and other intervals. The first value logic is handled outside the loop.
+    //         if (
+    //             (filterInterval === '10s' && totalSeconds % 10 === 0) ||
+    //             (filterInterval === '30s' && (currentSeconds === 0 || currentSeconds === 30)) ||
+    //             (filterInterval === '1m' && currentSeconds === 0) ||
+    //             (filterInterval === '2m' && currentSeconds === 0 && currentMinutes % 2 === 0) ||
+    //             (filterInterval === '3m' && currentSeconds === 0 && currentMinutes % 3 === 0)
+    //         ) {
+    //             filteredData.push(dataArray[i]);
+    //         }
+    //     }
+    //     return filteredData;
+    // }
     function filterMinuteData(dataArray, filterInterval) {
-        console.log("Filter Minute Data time interval: ", filterInterval);
-        // if (dataArray.length === 0) return [];
-
-        const intervals = {
-            '10s': 10, // Added 10 seconds interval
-            '30s': 30,
-            '1m': 60,
-            '2m': 120,
-            '3m': 180
-        };
-
-        if (!intervals.hasOwnProperty(filterInterval)) {
-            console.error("Invalid filter interval. It must be one of: '10s', '30s', '1m', '2m', '3m'.");
-            return [];
-        }
-
-        const intervalSeconds = intervals[filterInterval];
-        let filteredData = [];
-
-        // Ensure the first value is always included
-        if (dataArray.length > 0) {
-            filteredData.push(dataArray[0]);
-        }
-
-        for (let i = 1; i < dataArray.length; i++) { // Start from the second item
-            const currentTime = dataArray[i].indian_time.split(":");
-            const currentHours = parseInt(currentTime[0]);
-            const currentMinutes = parseInt(currentTime[1]);
-            const currentSeconds = parseInt(currentTime[2].split(" ")[0]);
-
-            // Calculate total seconds to simplify comparisons
-            const totalSeconds = currentHours * 3600 + currentMinutes * 60 + currentSeconds;
-
-            // The logic for '10s' and other intervals. The first value logic is handled outside the loop.
-            if (
-                (filterInterval === '10s' && totalSeconds % 10 === 0) ||
-                (filterInterval === '30s' && (currentSeconds === 0 || currentSeconds === 30)) ||
-                (filterInterval === '1m' && currentSeconds === 0) ||
-                (filterInterval === '2m' && currentSeconds === 0 && currentMinutes % 2 === 0) ||
-                (filterInterval === '3m' && currentSeconds === 0 && currentMinutes % 3 === 0)
-            ) {
-                filteredData.push(dataArray[i]);
-            }
-        }
-        return filteredData;
+        console.log("Filtering Data Time Interval: ", filterInterval);
+        return dataArray;
     }
     useEffect(() => {
         const fetchDataAndUpdateMainData = async () => {

@@ -144,6 +144,24 @@ app.get('/gency/authenticate', async (req, res) => {
         handleFyersError(res, error);
     }
 });
+// All the Symbols
+//  const stockSymbols = {
+//     'nifty': 'NSE:NIFTY50-INDEX',
+//     'banknifty': 'NSE:NIFTYBANK-INDEX',
+//     'sensex': 'BSE:SENSEX-INDEX',
+//     'finnifty': 'NSE:FINNIFTY-INDEX',
+//     'midcpnifty': 'NSE:MIDCPNIFTY-INDEX',
+//     'bankex': 'BSE:BANKEX-INDEX',
+//     'reliance': 'NSE:RELIANCE-EQ',
+//     'bajfinance': 'NSE:BAJFINANCE-EQ',
+//     'hdfcbank': 'NSE:HDFCBANK-EQ',
+//     'sbin': 'NSE:SBIN-EQ',
+//     'axisbank': 'NSE:AXISBANK-EQ',
+//     'icicibank': 'NSE:ICICIBANK-EQ',
+//     'infy': 'NSE:INFY-EQ',
+//     'tcs': 'NSE:TCS-EQ',
+// };
+
 // Socket Config
 createFyersSocket().then((fyersdata) => {
     // Main Api Routes
@@ -156,49 +174,28 @@ createFyersSocket().then((fyersdata) => {
         console.log("Welcome Mr. Lakshay")
     });
     io.on('connection', (socket) => {
-        // All the Symbols
-        const stockSymbols = {
-            'nifty': 'NSE:NIFTY50-INDEX',
-            'banknifty': 'NSE:NIFTYBANK-INDEX',
-            'sensex': 'BSE:SENSEX-INDEX',
-            'finnifty': 'NSE:FINNIFTY-INDEX',
-            'midcpnifty': 'NSE:MIDCPNIFTY-INDEX',
-            'bankex': 'BSE:BANKEX-INDEX',
-            'reliance': 'NSE:RELIANCE-EQ',
-            'bajfinance': 'NSE:BAJFINANCE-EQ',
-            'hdfcbank': 'NSE:HDFCBANK-EQ',
-            'sbin': 'NSE:SBIN-EQ',
-            'axisbank': 'NSE:AXISBANK-EQ',
-            'icicibank': 'NSE:ICICIBANK-EQ',
-            'infy': 'NSE:INFY-EQ',
-            'tcs': 'NSE:TCS-EQ',
-        };
-
         let subscribedSymbols = [];
 
         function onmsg(message) {
-            // console.log(message);
+            console.log(message);
             socket.emit('symbolData', message);
         }
-
         function onconnect() {
             fyersdata.subscribe(subscribedSymbols)
             fyersdata.autoreconnect();
         }
-
         function onerror(err) {
-            console.log(err);
+            // console.log(err.message);
         }
-
         function onclose() {
             console.log("socket closed");
             fyersdata.unsubscribe(subscribedSymbols)
         }
 
         socket.on('SpotLTPData', (symbol) => {
-            const originalSymbol = stockSymbols[symbol];
+            const originalSymbol = symbol;
             if (originalSymbol) {
-                subscribedSymbols = [originalSymbol]
+                subscribedSymbols.push(originalSymbol)
                 onconnect()
             }
         });
@@ -212,26 +209,30 @@ createFyersSocket().then((fyersdata) => {
         socket.on('OptionSymbolData', (symbol) => {
             const originalSymbol = symbol;
             if (originalSymbol) {
-                subscribedSymbols.push(originalSymbol[0], originalSymbol[1])
+                subscribedSymbols.push(...originalSymbol)
                 onconnect()
             }
         });
-
         socket.on('disconnect', () => {
             fyersdata.unsubscribe(subscribedSymbols)
         });
-
         fyersdata.on("message", onmsg);
         fyersdata.on("connect", onconnect);
         fyersdata.on("error", onerror);
         fyersdata.on("close", onclose);
 
-        fyersdata.connect();
+        // fyersdata.connect();
+    });
+    // Connect to fyersdata socket
+    fyersdata.connect().catch((err) => {
+        console.log("Fyers Errro In Instance:)");
     });
 
 }).catch((err) => {
     console.log("Not Able To Create fyers Socket :)");
 })
+
+
 // Server Up & Running
 server.listen(port, () => {
     console.log(`Server Live At Port ${port}.`);
