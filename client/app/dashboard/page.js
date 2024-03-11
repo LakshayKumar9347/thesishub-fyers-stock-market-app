@@ -250,6 +250,9 @@ const Page = () => {
         const selectedTime = event.target.value;
         setTimeUpdateDuration(selectedTime);
     };
+    const updateFormattedDate = (event) => {
+        console.log('clicked');
+    }
     function clearAllStates() {
         setSpotLTPCompleteData([])
         setSpotLTP([]);
@@ -435,57 +438,54 @@ const Page = () => {
 
         setPeDivergencedata(divergence);
     };
-    // function filterMinuteData(dataArray, filterInterval) {
-    //     console.log("Filtering Data Time Interval: ", filterInterval);
-    //     // if (dataArray.length === 0) return [];
-
-    //     const intervals = {
-    //         '10s': 10, // Added 10 seconds interval
-    //         '30s': 30,
-    //         '1m': 60,
-    //         '2m': 120,
-    //         '3m': 180
-    //     };
-
-    //     if (!intervals.hasOwnProperty(filterInterval)) {
-    //         console.error("Invalid filter interval. It must be one of: '10s', '30s', '1m', '2m', '3m'.");
-    //         return [];
-    //     }
-
-    //     const intervalSeconds = intervals[filterInterval];
-    //     let filteredData = [];
-
-    //     // Ensure the first value is always included
-    //     if (dataArray.length > 0) {
-    //         filteredData.push(dataArray[0]);
-    //     }
-
-    //     for (let i = 1; i < dataArray.length; i++) { // Start from the second item
-    //         const currentTime = dataArray[i].indian_time.split(":");
-    //         const currentHours = parseInt(currentTime[0]);
-    //         const currentMinutes = parseInt(currentTime[1]);
-    //         const currentSeconds = parseInt(currentTime[2].split(" ")[0]);
-
-    //         // Calculate total seconds to simplify comparisons
-    //         const totalSeconds = currentHours * 3600 + currentMinutes * 60 + currentSeconds;
-
-    //         // The logic for '10s' and other intervals. The first value logic is handled outside the loop.
-    //         if (
-    //             (filterInterval === '10s' && totalSeconds % 10 === 0) ||
-    //             (filterInterval === '30s' && (currentSeconds === 0 || currentSeconds === 30)) ||
-    //             (filterInterval === '1m' && currentSeconds === 0) ||
-    //             (filterInterval === '2m' && currentSeconds === 0 && currentMinutes % 2 === 0) ||
-    //             (filterInterval === '3m' && currentSeconds === 0 && currentMinutes % 3 === 0)
-    //         ) {
-    //             filteredData.push(dataArray[i]);
-    //         }
-    //     }
-    //     return filteredData;
-    // }
     function filterMinuteData(dataArray, filterInterval) {
-        console.log("Filtering Data Time Interval: ", filterInterval);
-        return dataArray;
+        // if (dataArray.length === 0) return [];
+        const intervals = {
+            '10s': 10, // Added 10 seconds interval
+            '30s': 30,
+            '1m': 60,
+            '2m': 120,
+            '3m': 180
+        };
+
+        if (!intervals.hasOwnProperty(filterInterval)) {
+            // console.error("Invalid filter interval. It must be one of: '10s', '30s', '1m', '2m', '3m'.");
+            return [];
+        }
+
+        const intervalSeconds = intervals[filterInterval];
+        let filteredData = [];
+
+        // Ensure the first value is always included
+        if (dataArray.length > 0) {
+            filteredData.push(dataArray[0]);
+        }
+
+        for (let i = 1; i < dataArray.length; i++) { // Start from the second item
+            const currentTime = dataArray[i].indian_time.split(":");
+            const currentHours = parseInt(currentTime[0]);
+            const currentMinutes = parseInt(currentTime[1]);
+            const currentSeconds = parseInt(currentTime[2].split(" ")[0]);
+
+            // Calculate total seconds to simplify comparisons
+            const totalSeconds = currentHours * 3600 + currentMinutes * 60 + currentSeconds;
+
+            // The logic for '10s' and other intervals. The first value logic is handled outside the loop.
+            if (
+                (filterInterval === '10s' && totalSeconds % 10 === 0) ||
+                (filterInterval === '30s' && (currentSeconds === 0 || currentSeconds === 30)) ||
+                (filterInterval === '1m' && currentSeconds === 0) ||
+                (filterInterval === '2m' && currentSeconds === 0 && currentMinutes % 2 === 0) ||
+                (filterInterval === '3m' && currentSeconds === 0 && currentMinutes % 3 === 0)
+            ) {
+                filteredData.push(dataArray[i]);
+            }
+        }
+        return filteredData;
     }
+    // function filterMinuteData(dataArray, filterInterval) {
+    //     return dataArray;
+    // }    
     useEffect(() => {
         const fetchDataAndUpdateMainData = async () => {
             if (selectedStrikePrice !== '') {
@@ -560,11 +560,14 @@ const Page = () => {
                                 <label className="text-gray-700" htmlFor="expiryDropdown">Expiry Date:</label>
                                 <select style={{ width: "153px" }} id="expiryDropdown" className="border rounded p-2" value={selectedExpiryDate} onChange={handleExpirydate}>
                                     <option value="" disabled>--Select--</option>
+                                    {/* <input type="date" id="datePicker" name="datePicker" onChange={updateFormattedDate} /> */}
+                                    <h1>custome data</h1>
                                     {expiryDates && expiryDates.length > 0 ? (
                                         expiryDates.map((value, index) => (
                                             <option key={index} value={value}>
                                                 {value}
                                             </option>
+
                                         ))
                                     ) : (
                                         <option value="" disabled>Loading...</option>

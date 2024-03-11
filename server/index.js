@@ -177,7 +177,7 @@ createFyersSocket().then((fyersdata) => {
         let subscribedSymbols = [];
 
         function onmsg(message) {
-            console.log(message);
+            // console.log(message);
             socket.emit('symbolData', message);
         }
         function onconnect() {
@@ -221,12 +221,12 @@ createFyersSocket().then((fyersdata) => {
         fyersdata.on("error", onerror);
         fyersdata.on("close", onclose);
 
-        // fyersdata.connect();
+        fyersdata.connect();
     });
     // Connect to fyersdata socket
-    fyersdata.connect().catch((err) => {
-        console.log("Fyers Errro In Instance:)");
-    });
+    // fyersdata.connect().catch((err) => {
+    //     console.log("Fyers Errro In Instance:)");
+    // });
 
 }).catch((err) => {
     console.log("Not Able To Create fyers Socket :)");
