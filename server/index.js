@@ -209,7 +209,9 @@ createFyersSocket().then((fyersdata) => {
         socket.on('OptionSymbolData', (symbol) => {
             const originalSymbol = symbol;
             if (originalSymbol) {
+                // console.log(originalSymbol);
                 subscribedSymbols.push(...originalSymbol)
+                // console.log(subscribedSymbols);
                 onconnect()
             }
         });

@@ -101,30 +101,28 @@ const Page = () => {
                             setSpotLTP(filteredData);
                             return newData;
                         });
+                    } else if (data.symbol === CeStrikeSymbol) {
+                        setRecordStockDataCECompleteData((prevData) => {
+                            const newData = [
+                                ...prevData,
+                                { symbol: data.symbol, ltp: data.ltp, exch_feed_time: data.exch_feed_time, indian_time: indianTime }
+                            ];
+                            const filteredData = filterMinuteData(newData, timeUpdateDuration);
+                            setRecordStockDataCE(filteredData)
+                            return newData;
+                        });
+                    } else if (data.symbol === PeStrikeSymbol) {
+                        setRecordStockDataPECompleteData((prevData) => {
+                            const newData = [
+                                ...prevData,
+                                { symbol: data.symbol, ltp: data.ltp, exch_feed_time: data.exch_feed_time, indian_time: indianTime }
+                            ];
+                            const filteredData = filterMinuteData(newData, timeUpdateDuration);
+                            setRecordStockDataPE(filteredData)
+                            return newData;
+                        });
                     }
-                    if (selectedStrikePrice !== '') {
-                        if (data.symbol === CeStrikeSymbol) {
-                            setRecordStockDataCECompleteData((prevData) => {
-                                const newData = [
-                                    ...prevData,
-                                    { symbol: data.symbol, ltp: data.ltp, exch_feed_time: data.exch_feed_time, indian_time: indianTime }
-                                ];
-                                const filteredData = filterMinuteData(newData, timeUpdateDuration);
-                                setRecordStockDataCE(filteredData)
-                                return newData;
-                            });
-                        } else if (data.symbol === PeStrikeSymbol) {
-                            setRecordStockDataPECompleteData((prevData) => {
-                                const newData = [
-                                    ...prevData,
-                                    { symbol: data.symbol, ltp: data.ltp, exch_feed_time: data.exch_feed_time, indian_time: indianTime }
-                                ];
-                                const filteredData = filterMinuteData(newData, timeUpdateDuration);
-                                setRecordStockDataPE(filteredData)
-                                return newData;
-                            });
-                        }
-                    }
+
                 }
             });
             return () => {
@@ -483,9 +481,6 @@ const Page = () => {
         }
         return filteredData;
     }
-    // function filterMinuteData(dataArray, filterInterval) {
-    //     return dataArray;
-    // }    
     useEffect(() => {
         const fetchDataAndUpdateMainData = async () => {
             if (selectedStrikePrice !== '') {
