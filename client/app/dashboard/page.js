@@ -53,7 +53,7 @@ const Page = () => {
             'infy': 'NSE:INFY-EQ',
             'tcs': 'NSE:TCS-EQ',
         };
-        const futuresResponse = await axios.get(`http://localhost:5000/api/v3/futures/${index || symbol}`);
+        const futuresResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/v3/futures/${index || symbol}`);
         const futureSymbol = futuresResponse.data.d[0].n;
         let OptionsResponse, CeStrikeSymbol, PeStrikeSymbol
         if (selectedStrikePrice !== '') {
@@ -61,12 +61,12 @@ const Page = () => {
             setRecordStockDataPECompleteData([])
             setRecordStockDataCE([])
             setRecordStockDataPE([])
-            OptionsResponse = await axios.get(`http://localhost:5000/option-chain/single-strike/${index || symbol}/${selectedStrikePrice}`)
+            OptionsResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/option-chain/single-strike/${index || symbol}/${selectedStrikePrice}`)
             CeStrikeSymbol = OptionsResponse.data.d[0].n
             PeStrikeSymbol = OptionsResponse.data.d[1].n
         }
         try {
-            const socket = io('http://localhost:5000', {
+            const socket = io('', {
                 path: '/socket.io',
             });
 
@@ -140,7 +140,7 @@ const Page = () => {
     const fetchRealTimeData = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:5000/option-chain/all/${index || symbol}`);
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/option-chain/all/${index || symbol}`);
 
             if (!response.ok) {
                 throw new Error(`Failed to fetch data. HTTP error! Status: ${response.status}`);
@@ -166,7 +166,7 @@ const Page = () => {
     const fetchStrikePrices = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:5000/option-chain/strikes/${index || symbol}`);
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/option-chain/strikes/${index || symbol}`);
             const parsedData = await response.json();
             const strikePrices = parsedData;
             setStrikePrices(strikePrices);
@@ -179,7 +179,7 @@ const Page = () => {
     const fetchExpirydates = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:5000/option-chain/expiry/${index || symbol}`);
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/option-chain/expiry/${index || symbol}`);
             const parsedData = await response.json();
             const expirydates = parsedData;
             setexpiryDates(expirydates[0])
@@ -210,7 +210,7 @@ const Page = () => {
     };
     const handleExpirydate = async (event) => {
         const eventValue = event.target.value;
-        const apiURL = `http://localhost:5000/option-chain/all/${index || symbol}/${eventValue}`;
+        const apiURL = `${process.env.NEXT_PUBLIC_API_URL}/option-chain/all/${index || symbol}/${eventValue}`;
         setselectedExpiryDate([eventValue]);
         setLoading(true);
 
@@ -481,7 +481,6 @@ const Page = () => {
         return filteredData;
     }
     useEffect(() => {
-        console.log("useEffect 1");
         const fetchDataAndUpdateMainData = async () => {
             if (selectedStrikePrice !== '') {
                 await Promise.all([
@@ -503,7 +502,6 @@ const Page = () => {
         fetchDataAndUpdateMainData();
     }, [index, symbol, selectedStrikePrice, timeUpdateDuration]);
     useEffect(() => {
-        console.log("useEffect 2");
         DivergenceData()
         FutureDivergenceCalc()
         CeDivergenceFunction();

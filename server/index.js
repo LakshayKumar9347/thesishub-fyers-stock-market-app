@@ -19,7 +19,7 @@ const io = socketIO(server, {
         credentials: true
     }
 });
-const port = 5000;
+const port = 5000 || process.env.PORT;
 const fs = require('fs')
 const path = require('path')
 const { exec } = require('child_process');

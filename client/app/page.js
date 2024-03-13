@@ -6,7 +6,6 @@ import Link from 'next/link';
 import Purplebutton from './components/Purplebutton';
 
 const Home = () => {
-
   return (
     <div>
       <Head>
