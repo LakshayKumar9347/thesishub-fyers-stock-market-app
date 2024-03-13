@@ -179,11 +179,11 @@ router.get('/ticker/:symbol/:userdate?', async (req, res) => {
             "cont_flag": "1"
         }
         fyers.getHistory(inp).then((response) => {
-            console.log(response)
+            // console.log(response)
             res.send(response)
         }).catch((err) => {
             console.log("Ticker Limit Exceed");
-            console.log(err)
+            // console.log(err)
             res.send(err)
         })
     } catch (error) {
