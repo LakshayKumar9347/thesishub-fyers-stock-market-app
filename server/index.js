@@ -14,7 +14,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIO(server, {
     cors: {
-        origin: "http://localhost:3000",
+        origin: "https://main--radhikakashyap.netlify.app",
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -49,7 +49,7 @@ cron.schedule('0 0 8 * * *', () => {
 });
 // Using Cors
 app.use(cors({
-    origin: "http://localhost:3000"
+    origin: "https://main--radhikakashyap.netlify.app"
 }));
 // Establishing Database Connection
 connectDB();
