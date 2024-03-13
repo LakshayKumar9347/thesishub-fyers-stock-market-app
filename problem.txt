@@ -1,1 +1,0 @@
-axis ,tcs,icici,sbi,NSE:BAJFINANCE-EQ,bankex , sensex strike price

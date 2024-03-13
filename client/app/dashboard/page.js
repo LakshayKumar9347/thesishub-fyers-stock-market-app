@@ -482,6 +482,7 @@ const Page = () => {
         return filteredData;
     }
     useEffect(() => {
+        console.log("useEffect 1");
         const fetchDataAndUpdateMainData = async () => {
             if (selectedStrikePrice !== '') {
                 await Promise.all([
@@ -503,6 +504,7 @@ const Page = () => {
         fetchDataAndUpdateMainData();
     }, [index, symbol, selectedStrikePrice, timeUpdateDuration]);
     useEffect(() => {
+        console.log("useEffect 2");
         DivergenceData()
         FutureDivergenceCalc()
         CeDivergenceFunction();

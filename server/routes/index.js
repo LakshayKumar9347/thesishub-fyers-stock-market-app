@@ -164,14 +164,12 @@ router.get('/ticker/:symbol/:userdate?', async (req, res) => {
         if (!validSymbols.includes(symbol)) {
             return res.status(400).send('Invalid symbol');
         }
-        symbolsToFetch.push(indexMapping[symbol]);
+        symbolsToFetch = indexMapping[symbol]
     } else {
         // If no symbol is provided, fetch data for all symbols
         symbolsToFetch = Object.values(indexMapping);
     }
     try {
-        // const response = await fyers.getQuotes(symbolsToFetch);
-        // res.send(response);
         var inp = {
             "symbol": symbolsToFetch,
             "resolution": "D",
@@ -181,9 +179,12 @@ router.get('/ticker/:symbol/:userdate?', async (req, res) => {
             "cont_flag": "1"
         }
         fyers.getHistory(inp).then((response) => {
+            console.log(response)
             res.send(response)
         }).catch((err) => {
-            console.log("Ticker Limit Exceed")
+            console.log("Ticker Limit Exceed");
+            console.log(err)
+            res.send(err)
         })
     } catch (error) {
         handleFyersError(res, error);

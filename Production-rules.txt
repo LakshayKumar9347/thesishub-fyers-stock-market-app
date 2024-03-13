@@ -1,2 +1,3 @@
 /marketfeed/option-chain/all/
 http://localhost:5000
+axis ,tcs,icici,sbi,NSE:BAJFINANCE-EQ,bankex , sensex strike price

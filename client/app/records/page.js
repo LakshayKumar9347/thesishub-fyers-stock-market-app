@@ -315,6 +315,7 @@ const Page = () => {
         setPeDivergencedata(divergence);
     };
     useEffect(() => {
+        console.log("useEffect 1");
         const fetchDataAndUpdateMainData = async () => {
             if (selectedStrikePrice !== '') {
                 await Promise.all([
@@ -337,6 +338,7 @@ const Page = () => {
     }, [index, symbol, selectedStrikePrice, selectedDate]);
 
     useEffect(() => {
+        console.log("useEffect 2");
         CeDivergenceFunction();
         PedivergenceFunction();
     }, [recordStockDataCE, recordStockDataPE]);
