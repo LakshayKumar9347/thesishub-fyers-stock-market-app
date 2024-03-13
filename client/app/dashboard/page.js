@@ -122,7 +122,6 @@ const Page = () => {
                             return newData;
                         });
                     }
-
                 }
             });
             return () => {

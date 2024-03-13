@@ -195,7 +195,7 @@ createFyersSocket().then((fyersdata) => {
         socket.on('SpotLTPData', (symbol) => {
             const originalSymbol = symbol;
             if (originalSymbol) {
-                subscribedSymbols.push(originalSymbol)
+                subscribedSymbols = [(originalSymbol)]
                 onconnect()
             }
         });
