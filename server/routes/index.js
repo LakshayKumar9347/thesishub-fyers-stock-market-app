@@ -280,7 +280,7 @@ router.get('/ltp-future/:symbol/:userdate?', async (req, res) => {
     }
     const formattedDate = formatDate(date);
     try {
-        const response = await axios.get(`http://localhost:5000/api/v3/futures/${symbol}`);
+        const response = await axios.get(`${process.env.MAIN_URL}/api/v3/futures/${symbol}`);
         const index = response.data.d[0].n;
         var inp = {
             "symbol": index,

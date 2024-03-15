@@ -73,7 +73,7 @@ router.get('/strikes/:symbol/:userdate?', async (req, res) => {
         tickerEndpoint = `${process.env.MAIN_URL}/api/v3/ticker/${symbol}/${formattedDate}`
     } else {
         date = new Date()
-        tickerEndpoint = `http://localhost:5000/api/v3/price/${symbol}`
+        tickerEndpoint = `${process.env.MAIN_URL}/api/v3/price/${symbol}`
     }
     const dayOfWeek = date.getDay();
     if (dayOfWeek === 0) { // Sunday
