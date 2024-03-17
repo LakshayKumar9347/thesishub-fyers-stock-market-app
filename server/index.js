@@ -71,9 +71,9 @@ async function refreshAccessToken() {
                 'Content-Type': 'application/json',
             },
         });
-
         console.log('Access token refreshed successfully');
         return response.data.access_token;
+        // return response;
     } catch (error) {
         console.error('Error refreshing access token:', error.message);
         throw error;
@@ -113,7 +113,7 @@ async function createFyersSocket() {
         return fyersdata;
     } catch (error) {
         // Handle the error here
-        console.error('Error creating FyersSocket instance:', error.message);
+        console.error('Error creating FyersSocket instance:', error.response.data.message);
         throw error;
     }
 }
@@ -233,8 +233,6 @@ createFyersSocket().then((fyersdata) => {
 }).catch((err) => {
     console.log("Not Able To Create fyers Socket :)");
 })
-
-
 // Server Up & Running
 server.listen(port, () => {
     console.log(`Server Live At Port ${port}.`);
