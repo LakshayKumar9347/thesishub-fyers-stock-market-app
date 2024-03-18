@@ -211,6 +211,7 @@ const Page = () => {
     const handleExpirydate = async (event) => {
         const eventValue = event.target.value;
         const apiURL = `${process.env.NEXT_PUBLIC_API_URL}/option-chain/all/${index || symbol}/${eventValue}`;
+
         setselectedExpiryDate([eventValue]);
         setLoading(true);
 
@@ -234,6 +235,48 @@ const Page = () => {
         } else {
             clearSelectedStrikeStates();
         }
+    };
+    const handleCustomExpiryDateChange = async (event) => {
+        const inputDate = event.target.value;
+        const formatDateString = (dateString) => {
+            const dateObj = new Date(dateString);
+            const options = { day: '2-digit', month: 'short', year: 'numeric' };
+            const formattedDate = dateObj.toLocaleDateString('en-GB', options);
+
+            // Splitting the formatted date to get day, month, and year
+            const [day, month, year] = formattedDate.split(' ');
+
+            // Reformatting with hyphen
+            return `${day}-${month}-${year}`;
+        };
+        if (inputDate) {
+            const formattedDate = [formatDateString(inputDate)];
+            const apiURL = `${process.env.NEXT_PUBLIC_API_URL}/option-chain/all/${index || symbol}/${formattedDate}`;
+            setselectedExpiryDate('');
+            setLoading(true);
+
+            if (formattedDate !== '') {
+                try {
+                    const response = await fetch(apiURL);
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch Strike Prices For the Given Expiry Date`);
+                    }
+                    const parsedData = await response.json();
+                    const dataArray = parsedData.d || [];
+                    const stockDataCE = dataArray.slice(0, 9);
+                    const stockDataPE = dataArray.slice(9);
+                    setStockDataCE(stockDataCE);
+                    setStockDataPE(stockDataPE);
+                } catch (error) {
+                    console.error('Error fetching data:', error);
+                } finally {
+                    setLoading(false);
+                }
+            } else {
+                clearSelectedStrikeStates();
+            }
+        }
+
     };
     const handleStrikeChange = async (event) => {
         const eventValue = event.target.value;
@@ -435,65 +478,68 @@ const Page = () => {
 
         setPeDivergencedata(divergence);
     };
+    // function filterMinuteData(dataArray, filterInterval) {
+    //     const intervals = {
+    //         '10s': 10,
+    //         '30s': 30,
+    //         '1m': 60,
+    //         '2m': 120,
+    //         '3m': 180
+    //     };
+
+    //     if (!intervals.hasOwnProperty(filterInterval)) {
+    //         return [];
+    //     }
+
+    //     const intervalSeconds = intervals[filterInterval];
+    //     let filteredData = [];
+
+    //     // Create a map to store the latest data for each currentTime
+    //     const latestDataMap = new Map();
+
+    //     // Boolean flag to track if the first value has been processed
+    //     let isFirstValueProcessed = false;
+
+    //     // Iterate through dataArray to find the latest data for each currentTime
+    //     for (let i = 0; i < dataArray.length; i++) {
+    //         const currentTime = dataArray[i].indian_time.split(":");
+    //         const currentHours = parseInt(currentTime[0]);
+    //         const currentMinutes = parseInt(currentTime[1]);
+    //         const currentSeconds = parseInt(currentTime[2].split(" ")[0]);
+
+    //         // Calculate total seconds to simplify comparisons
+    //         const totalSeconds = currentHours * 3600 + currentMinutes * 60 + currentSeconds;
+
+    //         // Check if the currentTime falls within the specified interval and skip the first value
+    //         if (isFirstValueProcessed && totalSeconds % intervalSeconds === 0) {
+    //             // Check if the latest data for this currentTime already exists in the map
+    //             if (!latestDataMap.has(totalSeconds)) {
+    //                 // If not, add the current data to the map
+    //                 latestDataMap.set(totalSeconds, dataArray[i]);
+    //             } else {
+    //                 // If yes, update the existing data if it's newer
+    //                 const existingData = latestDataMap.get(totalSeconds);
+    //                 if (dataArray[i].indian_time > existingData.indian_time) {
+    //                     latestDataMap.set(totalSeconds, dataArray[i]);
+    //                 }
+    //             }
+    //         } else {
+    //             // Skip the first value
+    //             isFirstValueProcessed = true;
+    //         }
+    //     }
+
+    //     // Extract the latest data from the map and add it to the filteredData array
+    //     latestDataMap.forEach((latestData) => {
+    //         filteredData.push(latestData);
+    //     });
+
+    //     return filteredData;
+    // }
     function filterMinuteData(dataArray, filterInterval) {
-        const intervals = {
-            '10s': 10,
-            '30s': 30,
-            '1m': 60,
-            '2m': 120,
-            '3m': 180
-        };
-
-        if (!intervals.hasOwnProperty(filterInterval)) {
-            return [];
-        }
-
-        const intervalSeconds = intervals[filterInterval];
-        let filteredData = [];
-
-        // Create a map to store the latest data for each currentTime
-        const latestDataMap = new Map();
-
-        // Boolean flag to track if the first value has been processed
-        let isFirstValueProcessed = false;
-
-        // Iterate through dataArray to find the latest data for each currentTime
-        for (let i = 0; i < dataArray.length; i++) {
-            const currentTime = dataArray[i].indian_time.split(":");
-            const currentHours = parseInt(currentTime[0]);
-            const currentMinutes = parseInt(currentTime[1]);
-            const currentSeconds = parseInt(currentTime[2].split(" ")[0]);
-
-            // Calculate total seconds to simplify comparisons
-            const totalSeconds = currentHours * 3600 + currentMinutes * 60 + currentSeconds;
-
-            // Check if the currentTime falls within the specified interval and skip the first value
-            if (isFirstValueProcessed && totalSeconds % intervalSeconds === 0) {
-                // Check if the latest data for this currentTime already exists in the map
-                if (!latestDataMap.has(totalSeconds)) {
-                    // If not, add the current data to the map
-                    latestDataMap.set(totalSeconds, dataArray[i]);
-                } else {
-                    // If yes, update the existing data if it's newer
-                    const existingData = latestDataMap.get(totalSeconds);
-                    if (dataArray[i].indian_time > existingData.indian_time) {
-                        latestDataMap.set(totalSeconds, dataArray[i]);
-                    }
-                }
-            } else {
-                // Skip the first value
-                isFirstValueProcessed = true;
-            }
-        }
-
-        // Extract the latest data from the map and add it to the filteredData array
-        latestDataMap.forEach((latestData) => {
-            filteredData.push(latestData);
-        });
-
-        return filteredData;
+        return dataArray
     }
-    // UseEffect HOOKS
+
     useEffect(() => {
         const fetchDataAndUpdateMainData = async () => {
             if (selectedStrikePrice !== '') {
@@ -522,6 +568,7 @@ const Page = () => {
         CeDivergenceFunction();
         PedivergenceFunction();
     }, [spotLTP, futuresData, recordStockDataCE, recordStockDataPE]);
+
     return (
         <>
             <Navbar />
@@ -568,14 +615,11 @@ const Page = () => {
                                 <label className="text-gray-700" htmlFor="expiryDropdown">Expiry Date:</label>
                                 <select style={{ width: "153px" }} id="expiryDropdown" className="border rounded p-2" value={selectedExpiryDate} onChange={handleExpirydate}>
                                     <option value="" disabled>--Select--</option>
-                                    {/* <input type="date" id="datePicker" name="datePicker" onChange={updateFormattedDate} /> */}
-                                    <h1>custome data</h1>
                                     {expiryDates && expiryDates.length > 0 ? (
                                         expiryDates.map((value, index) => (
                                             <option key={index} value={value}>
                                                 {value}
                                             </option>
-
                                         ))
                                     ) : (
                                         <option value="" disabled>Loading...</option>
@@ -627,6 +671,21 @@ const Page = () => {
                             {loading && <Loading />}
                         </div>
                     </div>
+                    <div className="flex justify-end">
+                        <div className='mb-3'>
+                            <label className="text-gray-700" htmlFor="datePicker">
+                                Choose a Expiry:
+                            </label>
+                            <input
+                                value={'DD-MM-YYYY'}
+                                type="date"
+                                id="datePicker"
+                                className="border border-gray-400 rounded p-1 ml-2 text-sm"
+                                onChange={handleCustomExpiryDateChange}
+                            />
+                        </div>
+                    </div>
+
 
                     <div className="flex justify-between">
                         <div className="overflow-x-auto flex-grow mr-2">
@@ -733,5 +792,4 @@ const Page = () => {
         </>
     );
 };
-
 export default Page;
