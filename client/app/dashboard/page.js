@@ -53,7 +53,7 @@ const Page = () => {
             'infy': 'NSE:INFY-EQ',
             'tcs': 'NSE:TCS-EQ',
         };
-        const futuresResponse = await axios.get(`http://localhost:5000/api/v3/futures/${index || symbol}`);
+        const futuresResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/v3/futures/${index || symbol}`);
         const futureSymbol = futuresResponse.data.d[0].n;
         let OptionsResponse, CeStrikeSymbol, PeStrikeSymbol
         if (selectedStrikePrice !== '') {
@@ -61,12 +61,12 @@ const Page = () => {
             setRecordStockDataPECompleteData([])
             setRecordStockDataCE([])
             setRecordStockDataPE([])
-            OptionsResponse = await axios.get(`http://localhost:5000/option-chain/single-strike/${index || symbol}/${selectedStrikePrice}`)
+            OptionsResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/option-chain/single-strike/${index || symbol}/${selectedStrikePrice}`)
             CeStrikeSymbol = OptionsResponse.data.d[0].n
             PeStrikeSymbol = OptionsResponse.data.d[1].n
         }
         try {
-            const socket = io('http://localhost:5000', {
+            const socket = io(`${process.env.NEXT_PUBLIC_WS_URL}`, {
                 path: '/socket.io',
             });
 
@@ -122,7 +122,6 @@ const Page = () => {
                             return newData;
                         });
                     }
-
                 }
             });
             return () => {
@@ -141,7 +140,7 @@ const Page = () => {
     const fetchRealTimeData = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:5000/option-chain/all/${index || symbol}`);
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/option-chain/all/${index || symbol}`);
 
             if (!response.ok) {
                 throw new Error(`Failed to fetch data. HTTP error! Status: ${response.status}`);
@@ -167,7 +166,7 @@ const Page = () => {
     const fetchStrikePrices = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:5000/option-chain/strikes/${index || symbol}`);
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/option-chain/strikes/${index || symbol}`);
             const parsedData = await response.json();
             const strikePrices = parsedData;
             setStrikePrices(strikePrices);
@@ -180,7 +179,7 @@ const Page = () => {
     const fetchExpirydates = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:5000/option-chain/expiry/${index || symbol}`);
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/option-chain/expiry/${index || symbol}`);
             const parsedData = await response.json();
             const expirydates = parsedData;
             setexpiryDates(expirydates[0])
@@ -211,7 +210,7 @@ const Page = () => {
     };
     const handleExpirydate = async (event) => {
         const eventValue = event.target.value;
-        const apiURL = `http://localhost:5000/option-chain/all/${index || symbol}/${eventValue}`;
+        const apiURL = `${process.env.NEXT_PUBLIC_API_URL}/option-chain/all/${index || symbol}/${eventValue}`;
         setselectedExpiryDate([eventValue]);
         setLoading(true);
 
@@ -437,9 +436,8 @@ const Page = () => {
         setPeDivergencedata(divergence);
     };
     function filterMinuteData(dataArray, filterInterval) {
-        // if (dataArray.length === 0) return [];
         const intervals = {
-            '10s': 10, // Added 10 seconds interval
+            '10s': 10,
             '30s': 30,
             '1m': 60,
             '2m': 120,
@@ -447,19 +445,20 @@ const Page = () => {
         };
 
         if (!intervals.hasOwnProperty(filterInterval)) {
-            // console.error("Invalid filter interval. It must be one of: '10s', '30s', '1m', '2m', '3m'.");
             return [];
         }
 
         const intervalSeconds = intervals[filterInterval];
         let filteredData = [];
 
-        // Ensure the first value is always included
-        if (dataArray.length > 0) {
-            filteredData.push(dataArray[0]);
-        }
+        // Create a map to store the latest data for each currentTime
+        const latestDataMap = new Map();
 
-        for (let i = 1; i < dataArray.length; i++) { // Start from the second item
+        // Boolean flag to track if the first value has been processed
+        let isFirstValueProcessed = false;
+
+        // Iterate through dataArray to find the latest data for each currentTime
+        for (let i = 0; i < dataArray.length; i++) {
             const currentTime = dataArray[i].indian_time.split(":");
             const currentHours = parseInt(currentTime[0]);
             const currentMinutes = parseInt(currentTime[1]);
@@ -468,24 +467,39 @@ const Page = () => {
             // Calculate total seconds to simplify comparisons
             const totalSeconds = currentHours * 3600 + currentMinutes * 60 + currentSeconds;
 
-            // The logic for '10s' and other intervals. The first value logic is handled outside the loop.
-            if (
-                (filterInterval === '10s' && totalSeconds % 10 === 0) ||
-                (filterInterval === '30s' && (currentSeconds === 0 || currentSeconds === 30)) ||
-                (filterInterval === '1m' && currentSeconds === 0) ||
-                (filterInterval === '2m' && currentSeconds === 0 && currentMinutes % 2 === 0) ||
-                (filterInterval === '3m' && currentSeconds === 0 && currentMinutes % 3 === 0)
-            ) {
-                filteredData.push(dataArray[i]);
+            // Check if the currentTime falls within the specified interval and skip the first value
+            if (isFirstValueProcessed && totalSeconds % intervalSeconds === 0) {
+                // Check if the latest data for this currentTime already exists in the map
+                if (!latestDataMap.has(totalSeconds)) {
+                    // If not, add the current data to the map
+                    latestDataMap.set(totalSeconds, dataArray[i]);
+                } else {
+                    // If yes, update the existing data if it's newer
+                    const existingData = latestDataMap.get(totalSeconds);
+                    if (dataArray[i].indian_time > existingData.indian_time) {
+                        latestDataMap.set(totalSeconds, dataArray[i]);
+                    }
+                }
+            } else {
+                // Skip the first value
+                isFirstValueProcessed = true;
             }
         }
+
+        // Extract the latest data from the map and add it to the filteredData array
+        latestDataMap.forEach((latestData) => {
+            filteredData.push(latestData);
+        });
+
         return filteredData;
     }
+    // UseEffect HOOKS
     useEffect(() => {
         const fetchDataAndUpdateMainData = async () => {
             if (selectedStrikePrice !== '') {
                 await Promise.all([
                     fetchSpotLTP(),
+                    filterMinuteData()
                 ]);
             }
             const mainDataFunctions = async () => {
@@ -508,7 +522,6 @@ const Page = () => {
         CeDivergenceFunction();
         PedivergenceFunction();
     }, [spotLTP, futuresData, recordStockDataCE, recordStockDataPE]);
-
     return (
         <>
             <Navbar />

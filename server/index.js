@@ -14,12 +14,12 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIO(server, {
     cors: {
-        origin: "http://localhost:3000",
+        origin: `${process.env.CORS_URL}`,
         methods: ["GET", "POST"],
         credentials: true
     }
 });
-const port = 5000;
+const port = 5000 || process.env.PORT;
 const fs = require('fs')
 const path = require('path')
 const { exec } = require('child_process');
@@ -49,7 +49,7 @@ cron.schedule('0 0 8 * * *', () => {
 });
 // Using Cors
 app.use(cors({
-    origin: "http://localhost:3000"
+    origin: `${process.env.CORS_URL}`
 }));
 // Establishing Database Connection
 connectDB();
@@ -71,9 +71,9 @@ async function refreshAccessToken() {
                 'Content-Type': 'application/json',
             },
         });
-
         console.log('Access token refreshed successfully');
         return response.data.access_token;
+        // return response;
     } catch (error) {
         console.error('Error refreshing access token:', error.message);
         throw error;
@@ -113,7 +113,7 @@ async function createFyersSocket() {
         return fyersdata;
     } catch (error) {
         // Handle the error here
-        console.error('Error creating FyersSocket instance:', error.message);
+        console.error('Error creating FyersSocket instance:', error.response.data.message);
         throw error;
     }
 }
@@ -195,7 +195,7 @@ createFyersSocket().then((fyersdata) => {
         socket.on('SpotLTPData', (symbol) => {
             const originalSymbol = symbol;
             if (originalSymbol) {
-                subscribedSymbols.push(originalSymbol)
+                subscribedSymbols = [(originalSymbol)]
                 onconnect()
             }
         });
@@ -233,8 +233,6 @@ createFyersSocket().then((fyersdata) => {
 }).catch((err) => {
     console.log("Not Able To Create fyers Socket :)");
 })
-
-
 // Server Up & Running
 server.listen(port, () => {
     console.log(`Server Live At Port ${port}.`);
