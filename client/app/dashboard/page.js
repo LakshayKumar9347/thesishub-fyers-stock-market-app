@@ -8,7 +8,6 @@ import Loading from '../components/Loading';
 import io from 'socket.io-client';
 import axios from 'axios';
 
-
 const Page = () => {
     // All the variable that we are using for storing the data in response
     const [loading, setLoading] = useState(true);
@@ -537,9 +536,65 @@ const Page = () => {
     //     return filteredData;
     // }
     function filterMinuteData(dataArray, filterInterval) {
-        return dataArray
-    }
+        const intervals = {
+            '1s': 1,
+            '3s': 3,
+            '10s': 10,
+            '30s': 30,
+            '1m': 60,
+            '2m': 120,
+            '3m': 180
+        };
 
+        if (!intervals.hasOwnProperty(filterInterval)) {
+            return [];
+        }
+
+        const intervalSeconds = intervals[filterInterval];
+        let filteredData = [];
+
+        // Create a map to store the latest data for each currentTime
+        const latestDataMap = new Map();
+
+        // Boolean flag to track if the first value has been processed
+        let isFirstValueProcessed = false;
+
+        // Iterate through dataArray to find the latest data for each currentTime
+        for (let i = 0; i < dataArray.length; i++) {
+            const currentTime = dataArray[i].indian_time.split(":");
+            const currentHours = parseInt(currentTime[0]);
+            const currentMinutes = parseInt(currentTime[1]);
+            const currentSeconds = parseInt(currentTime[2].split(" ")[0]);
+
+            // Calculate total seconds to simplify comparisons
+            const totalSeconds = currentHours * 3600 + currentMinutes * 60 + currentSeconds;
+
+            // Check if the currentTime falls within the specified interval and skip the first value
+            if (isFirstValueProcessed && totalSeconds % intervalSeconds === 0) {
+                // Check if the latest data for this currentTime already exists in the map
+                if (!latestDataMap.has(totalSeconds)) {
+                    // If not, add the current data to the map
+                    latestDataMap.set(totalSeconds, dataArray[i]);
+                } else {
+                    // If yes, update the existing data if it's newer
+                    const existingData = latestDataMap.get(totalSeconds);
+                    if (dataArray[i].indian_time > existingData.indian_time) {
+                        latestDataMap.set(totalSeconds, dataArray[i]);
+                    }
+                }
+            } else {
+                // Skip the first value
+                isFirstValueProcessed = true;
+            }
+        }
+
+        // Extract the latest data from the map and add it to the filteredData array
+        latestDataMap.forEach((latestData) => {
+            filteredData.push(latestData);
+        });
+
+        return filteredData;
+    }
     useEffect(() => {
         const fetchDataAndUpdateMainData = async () => {
             if (selectedStrikePrice !== '') {
@@ -651,6 +706,8 @@ const Page = () => {
                                 </label>
                                 <select style={{ width: "153px" }} id="timeDropdown" className="border rounded p-2"
                                     value={timeUpdateDuration} onChange={handleTimeDurationChange}>
+                                    <option value="1s">1 Second</option>
+                                    <option value="3s">3 Second</option>
                                     <option value="10s">10 Seconds</option>
                                     <option value="30s">30 Seconds</option>
                                     <option value="1m">1 Minute</option>
