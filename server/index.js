@@ -126,7 +126,7 @@ app.get('/emer/authorize', (req, res) => {
 app.get('/gency/authenticate', async (req, res) => {
     try {
         const authCode = process.env.AUTH_TOKEN;
-        console.log(process.env.AUTH_TOKEN);
+        // console.log(process.env.AUTH_TOKEN);
         const secretKey = process.env.SECRET_KEY;
 
         const response = await fyers.generate_access_token({
@@ -134,9 +134,27 @@ app.get('/gency/authenticate', async (req, res) => {
             auth_code: authCode,
         });
 
-        console.log(response);
         if (response.code === 200) {
             res.send('Access Token generated');
+            const RenewedAccess_token = response.access_token
+            const RenewedRefresh_token = response.refresh_token
+            process.env.ACCESS_TOKEN = RenewedAccess_token
+            process.env.REFRESH_TOKEN = RenewedRefresh_token
+
+            // Load .env file
+            const envFilePath = path.resolve('./.env');
+            const envContents = fs.readFileSync(envFilePath, 'utf8');
+            const updatedEnvContents = envContents
+                .replace(/^ACCESS_TOKEN=.*/m, `ACCESS_TOKEN='${RenewedAccess_token}'`)
+                .replace(/^REFRESH_TOKEN=.*/m, `REFRESH_TOKEN='${RenewedRefresh_token}'`);
+
+
+            // Update .env file with new access token
+            fs.writeFileSync(envFilePath, updatedEnvContents);
+
+            console.log("Refresh Token Have Been Expired So We Renewd It.");
+            // Restart the Express server
+            restartServer();
         } else {
             res.status(response.code).send(response.message);
         }
@@ -232,6 +250,16 @@ createFyersSocket().then((fyersdata) => {
 
 }).catch((err) => {
     console.log("Not Able To Create fyers Socket :)");
+    app.get('/', (req, res) => {
+        res.send("Not Able To Create fyers Socket :)");
+    });
+    const RenewRefreshTokenWithAuthenticate = async () => {
+        const apiUrl = `${process.env.MAIN_URL}/gency/authenticate`
+        const response = await axios.get(apiUrl)
+        const data = response.data
+       console.log(data);
+    }
+    RenewRefreshTokenWithAuthenticate()
 })
 // Server Up & Running
 server.listen(port, () => {
