@@ -98,7 +98,7 @@ async function createFyersSocket() {
             process.env.ACCESS_TOKEN = newAccessToken;
 
             // Load .env file
-            const envFilePath = path.resolve('./.env');
+            const envFilePath = path.resolve(`${process.env.SECRET_VALUE_PATH}.env`);
             const envContents = fs.readFileSync(envFilePath, 'utf8');
             const updatedEnvContents = envContents.replace(/^ACCESS_TOKEN=.*/m, `ACCESS_TOKEN='${newAccessToken}'`);
 
@@ -114,7 +114,6 @@ async function createFyersSocket() {
     } catch (error) {
         // Handle the error here
         console.error('Error creating FyersSocket instance:', error.response.data.message);
-        throw error;
     }
 }
 // Under Developing Logic when Auth Token Expires
