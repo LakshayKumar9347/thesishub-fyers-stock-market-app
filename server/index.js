@@ -189,13 +189,14 @@ createFyersSocket().then((fyersdata) => {
     app.use('/records', require('./routes/records'));
     app.get('/', (req, res) => {
         res.send("Welcome to Stock Monitoring Server");
-        console.log("Welcome Mr. Lakshay")
+        console.log("Welcome Mr. Rishi Rai")
     });
     io.on('connection', (socket) => {
         let subscribedSymbols = [];
 
         function onmsg(message) {
-            // console.log(message);
+            // console.log(message.symbol);
+            // console.log("Subscribe Symbols",subscribedSymbols, subscribedSymbols.length);
             socket.emit('symbolData', message);
         }
         function onconnect() {
@@ -243,11 +244,6 @@ createFyersSocket().then((fyersdata) => {
 
         fyersdata.connect();
     });
-    // Connect to fyersdata socket
-    // fyersdata.connect().catch((err) => {
-    //     console.log("Fyers Errro In Instance:)");
-    // });
-
 }).catch((err) => {
     console.log("Not Able To Create fyers Socket :)");
     app.get('/', (req, res) => {

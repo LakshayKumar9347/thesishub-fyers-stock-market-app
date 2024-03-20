@@ -174,10 +174,10 @@ function calculateRoundedLTP(ltp, symbol) {
             gap = 25;
         } else if (symbol === 'reliance' || symbol === "tcs") {
             gap = 20;
-        } else if (symbol === 'hdfcbank' || symbol === "infy") {
+        } else if (symbol === 'hdfcbank' || symbol === "infy" || symbol === 'axisbank' || symbol === 'icicibank') {
             gap = 10;
 
-        } else if (symbol === 'sbin' || symbol === 'axisbank' || symbol === 'icicibank') {
+        } else if (symbol === 'sbin' ) {
             gap = 5;
         }
     } else {
