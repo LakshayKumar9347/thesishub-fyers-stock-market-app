@@ -19,7 +19,7 @@ router.get('/all/:symbol/:date?', async (req, res) => {
     if (!validStockSymbols.includes(symbol)) {
         return res.status(400).json({ "error": 'Invalid stock symbol' });
     }
-    const apiUrl = `${process.env.MAIN_URL}/api/v3/ticker/${symbol}/2024-02-09`;
+    const apiUrl = `${process.env.MAIN_URL}/api/v3/ticker/${symbol}`;
     const tickerEndpoint = apiUrl;
     try {
         const tickerResponse = await axios.get(tickerEndpoint);
@@ -237,7 +237,7 @@ function generateStrikePrices(roundLTP, totalStrikePrices, symbol, date = '') {
         'infy': 10,
         'sbin': 5,
         'axisbank': 10,
-        'icicibank': 5
+        'icicibank': 10
     };
     const gap = symbolConfig[symbol]
 
@@ -443,7 +443,7 @@ function generateStrikePricesSingle(roundLTP, totalStrikePrices, symbol) {
         'infy': 10,
         'sbin': 5,
         'axisbank': 10,
-        'icicibank': 5
+        'icicibank': 10
     };
     const gap = symbolConfig[symbol];
     const currentDate = new Date();
@@ -598,9 +598,9 @@ function generateStrikePricesNumeric(roundLTP, totalStrikePrices, symbol) {
         gap = 25;
     } else if (symbol === 'reliance' || symbol === "tcs") {
         gap = 20;
-    } else if (symbol === 'hdfcbank' || symbol === "infy" || symbol === 'axisbank') {
+    } else if (symbol === 'hdfcbank' || symbol === "infy" || symbol === 'axisbank' || symbol === 'icicibank') {
         gap = 10;
-    } else if (symbol === 'sbin' || symbol === 'icicibank') {
+    } else if (symbol === 'sbin') {
         gap = 5;
     }
 
