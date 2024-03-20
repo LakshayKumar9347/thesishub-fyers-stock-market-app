@@ -29,10 +29,12 @@ const Tableone = () => {
     const [selectedStrikePrice, setSelectedStrikePrice] = useState('');
     const [symbol, setSymbol] = useState('');
     const [index, setIndex] = useState('nifty');
-
     // Mai Function Which Fetch Data from Server
     const fetchSpotLTP = async () => {
         let socket;
+        const currentDate = new Date();
+        const currentMonth = currentDate.toLocaleString('default', { month: 'short' }).toUpperCase();
+        const currentYear = currentDate.getFullYear().toString().slice(-2);
         const indexMapping = {
             'nifty': 'NSE:NIFTY50-INDEX',
             'banknifty': 'NSE:NIFTYBANK-INDEX',
@@ -49,8 +51,23 @@ const Tableone = () => {
             'infy': 'NSE:INFY-EQ',
             'tcs': 'NSE:TCS-EQ',
         };
-        const futuresResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/v3/futures/${index || symbol}`);
-        const futureSymbol = futuresResponse.data.d[0].n;
+        const FutureSymbolMap = {
+            'nifty': `NSE:NIFTY${currentYear}${currentMonth}FUT`,
+            'banknifty': `NSE:BANKNIFTY${currentYear}${currentMonth}FUT`,
+            'finnifty': `NSE:FINNIFTY${currentYear}${currentMonth}FUT`,
+            'midcpnifty': `NSE:MIDCPNIFTY${currentYear}${currentMonth}FUT`,
+            'sensex': `BSE:SENSEX${currentYear}${currentMonth}FUT`,
+            'bankex': `BSE:BANKEX${currentYear}${currentMonth}FUT`,
+            'reliance': `NSE:RELIANCE${currentYear}${currentMonth}FUT`,
+            'hdfcbank': `NSE:HDFCBANK${currentYear}${currentMonth}FUT`,
+            'bajfinance': `NSE:BAJFINANCE${currentYear}${currentMonth}FUT`,
+            'sbin': `NSE:SBIN${currentYear}${currentMonth}FUT`,
+            'axisbank': `NSE:AXISBANK${currentYear}${currentMonth}FUT`,
+            'icicibank': `NSE:ICICIBANK${currentYear}${currentMonth}FUT`,
+            'infy': `NSE:INFY${currentYear}${currentMonth}FUT`,
+            'tcs': `NSE:TCS${currentYear}${currentMonth}FUT`
+        }
+        const futureSymbol = FutureSymbolMap[index || symbol]
         let OptionsResponse, CeStrikeSymbol, PeStrikeSymbol
         if (selectedStrikePrice !== '') {
             setRecordStockDataCECompleteData([])
@@ -67,8 +84,7 @@ const Tableone = () => {
             });
 
             socket.on('connect', async () => {
-                socket.emit('SpotLTPData', indexMapping[index || symbol]);
-                socket.emit('FutureLTPData', futureSymbol);
+                console.log("Connection To WebSocket Server Successfull");
                 if (selectedStrikePrice !== '') {
                     socket.emit('OptionSymbolData', [CeStrikeSymbol, PeStrikeSymbol]);
                 }
@@ -286,9 +302,6 @@ const Tableone = () => {
         const selectedTime = event.target.value;
         setTimeUpdateDuration(selectedTime);
     };
-    const updateFormattedDate = (event) => {
-        console.log('clicked');
-    }
     function clearAllStates() {
         setSpotLTPCompleteData([])
         setSpotLTP([]);
@@ -514,6 +527,9 @@ const Tableone = () => {
 
         return filteredData;
     }
+    // function filterMinuteData(dataArray, filterInterval){
+    //     return dataArray
+    // }
     useEffect(() => {
         const fetchDataAndUpdateMainData = async () => {
             if (selectedStrikePrice !== '') {

@@ -191,10 +191,29 @@ createFyersSocket().then((fyersdata) => {
         console.log("Welcome Mr. Rishi Rai")
     });
     io.on('connection', (socket) => {
-        let subscribedSymbols = [];
+        const currentDate = new Date();
+        const currentMonth = currentDate.toLocaleString('default', { month: 'short' }).toUpperCase();
+        const currentYear = currentDate.getFullYear().toString().slice(-2);
+        let subscribedSymbols = [
+            "NSE:NIFTY50-INDEX", "NSE:NIFTYBANK-INDEX", "NSE:FINNIFTY-INDEX", "NSE:MIDCPNIFTY-INDEX", "BSE:SENSEX-INDEX", "BSE:BANKEX-INDEX", "NSE:RELIANCE-EQ", "NSE:HDFCBANK-EQ", "NSE:BAJFINANCE-EQ", "NSE:SBIN-EQ",
+            "NSE:AXISBANK-EQ", "NSE:ICICIBANK-EQ", "NSE:INFY-EQ", "NSE:TCS-EQ",
+            `NSE:NIFTY${currentYear}${currentMonth}FUT`,
+            `NSE:BANKNIFTY${currentYear}${currentMonth}FUT`,
+            `NSE:FINNIFTY${currentYear}${currentMonth}FUT`,
+            `NSE:MIDCPNIFTY${currentYear}${currentMonth}FUT`,
+            `BSE:SENSEX${currentYear}${currentMonth}FUT`,
+            `BSE:BANKEX${currentYear}${currentMonth}FUT`,
+            `NSE:RELIANCE${currentYear}${currentMonth}FUT`,
+            `NSE:HDFCBANK${currentYear}${currentMonth}FUT`,
+            `NSE:BAJFINANCE${currentYear}${currentMonth}FUT`,
+            `NSE:SBIN${currentYear}${currentMonth}FUT`,
+            `NSE:AXISBANK${currentYear}${currentMonth}FUT`,
+            `NSE:ICICIBANK${currentYear}${currentMonth}FUT`,
+            `NSE:INFY${currentYear}${currentMonth}FUT`,
+            `NSE:TCS${currentYear}${currentMonth}FUT`];
 
         function onmsg(message) {
-            // console.log(message.symbol);
+            // console.log(message);
             // console.log("Subscribe Symbols",subscribedSymbols, subscribedSymbols.length);
             socket.emit('symbolData', message);
         }
@@ -209,21 +228,6 @@ createFyersSocket().then((fyersdata) => {
             console.log("socket closed");
             fyersdata.unsubscribe(subscribedSymbols)
         }
-
-        socket.on('SpotLTPData', (symbol) => {
-            const originalSymbol = symbol;
-            if (originalSymbol) {
-                subscribedSymbols = [(originalSymbol)]
-                onconnect()
-            }
-        });
-        socket.on('FutureLTPData', (symbol) => {
-            const originalSymbol = symbol;
-            if (originalSymbol) {
-                subscribedSymbols.push(originalSymbol)
-                onconnect()
-            }
-        });
         socket.on('OptionSymbolData', (symbol) => {
             const originalSymbol = symbol;
             if (originalSymbol) {
@@ -252,7 +256,7 @@ createFyersSocket().then((fyersdata) => {
         const apiUrl = `${process.env.MAIN_URL}/gency/authenticate`
         const response = await axios.get(apiUrl)
         const data = response.data
-       console.log(data);
+        console.log(data);
     }
     RenewRefreshTokenWithAuthenticate()
 })

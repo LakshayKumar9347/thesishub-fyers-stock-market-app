@@ -28,7 +28,7 @@ const Tabletwo = () => {
     const [selectedExpiryDate, setselectedExpiryDate] = useState('')
     const [selectedStrikePrice, setSelectedStrikePrice] = useState('');
     const [symbol, setSymbol] = useState('');
-    const [index, setIndex] = useState('');
+    const [index, setIndex] = useState('banknifty');
 
     // Mai Function Which Fetch Data from Server
     const fetchSpotLTP = async () => {
@@ -49,8 +49,23 @@ const Tabletwo = () => {
             'infy': 'NSE:INFY-EQ',
             'tcs': 'NSE:TCS-EQ',
         };
-        const futuresResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/v3/futures/${index || symbol}`);
-        const futureSymbol = futuresResponse.data.d[0].n;
+        const FutureSymbolMap = {
+            'nifty': `NSE:NIFTY${currentYear}${currentMonth}FUT`,
+            'banknifty': `NSE:BANKNIFTY${currentYear}${currentMonth}FUT`,
+            'finnifty': `NSE:FINNIFTY${currentYear}${currentMonth}FUT`,
+            'midcpnifty': `NSE:MIDCPNIFTY${currentYear}${currentMonth}FUT`,
+            'sensex': `BSE:SENSEX${currentYear}${currentMonth}FUT`,
+            'bankex': `BSE:BANKEX${currentYear}${currentMonth}FUT`,
+            'reliance': `NSE:RELIANCE${currentYear}${currentMonth}FUT`,
+            'hdfcbank': `NSE:HDFCBANK${currentYear}${currentMonth}FUT`,
+            'bajfinance': `NSE:BAJFINANCE${currentYear}${currentMonth}FUT`,
+            'sbin': `NSE:SBIN${currentYear}${currentMonth}FUT`,
+            'axisbank': `NSE:AXISBANK${currentYear}${currentMonth}FUT`,
+            'icicibank': `NSE:ICICIBANK${currentYear}${currentMonth}FUT`,
+            'infy': `NSE:INFY${currentYear}${currentMonth}FUT`,
+            'tcs': `NSE:TCS${currentYear}${currentMonth}FUT`
+        }
+        const futureSymbol = FutureSymbolMap[index || symbol]
         let OptionsResponse, CeStrikeSymbol, PeStrikeSymbol
         if (selectedStrikePrice !== '') {
             setRecordStockDataCECompleteData([])
@@ -67,8 +82,6 @@ const Tabletwo = () => {
             });
 
             socket.on('connect', async () => {
-                socket.emit('SpotLTPData', indexMapping[index || symbol]);
-                socket.emit('FutureLTPData', futureSymbol);
                 if (selectedStrikePrice !== '') {
                     socket.emit('OptionSymbolData', [CeStrikeSymbol, PeStrikeSymbol]);
                 }
@@ -95,6 +108,7 @@ const Tabletwo = () => {
                             ];
                             const filteredData = filterMinuteData(newData, timeUpdateDuration);
                             setSpotLTP(filteredData);
+                            console.log(filteredData);
                             return newData;
                         });
                     } else if (data.symbol === CeStrikeSymbol) {
