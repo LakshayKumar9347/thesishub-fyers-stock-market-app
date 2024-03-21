@@ -280,8 +280,26 @@ router.get('/ltp-future/:symbol/:userdate?', async (req, res) => {
     }
     const formattedDate = formatDate(date);
     try {
-        const response = await axios.get(`${process.env.MAIN_URL}/api/v3/futures/${symbol}`);
-        const index = response.data.d[0].n;
+        const currentDate = new Date();
+        const currentMonth = currentDate.toLocaleString('default', { month: 'short' }).toUpperCase();
+        const currentYear = currentDate.getFullYear().toString().slice(-2);
+        let FuturesSymbols = {
+            'nifty': `NSE:NIFTY${currentYear}${currentMonth}FUT`,
+            'banknifty': `NSE:BANKNIFTY${currentYear}${currentMonth}FUT`,
+            'finnifty': `NSE:FINNIFTY${currentYear}${currentMonth}FUT`,
+            'midcpnifty': `NSE:MIDCPNIFTY${currentYear}${currentMonth}FUT`,
+            'sensex': `BSE:SENSEX${currentYear}${currentMonth}FUT`,
+            'bankex': `BSE:BANKEX${currentYear}${currentMonth}FUT`,
+            'reliance': `NSE:RELIANCE${currentYear}${currentMonth}FUT`,
+            'hdfcbank': `NSE:HDFCBANK${currentYear}${currentMonth}FUT`,
+            'bajfinance': `NSE:BAJFINANCE${currentYear}${currentMonth}FUT`,
+            'sbin': `NSE:SBIN${currentYear}${currentMonth}FUT`,
+            'axisbank': `NSE:AXISBANK${currentYear}${currentMonth}FUT`,
+            'icicibank': `NSE:ICICIBANK${currentYear}${currentMonth}FUT`,
+            'infy': `NSE:INFY${currentYear}${currentMonth}FUT`,
+            'tcs': `NSE:TCS${currentYear}${currentMonth}FUT`
+        };
+        const index = FuturesSymbols[symbol]
         var inp = {
             "symbol": index,
             "resolution": "1",

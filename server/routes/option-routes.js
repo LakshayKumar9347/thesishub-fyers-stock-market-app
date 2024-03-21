@@ -30,7 +30,7 @@ router.get('/all/:symbol/:date?', async (req, res) => {
         const data = await fyers.getQuotes(strikePrices)
         res.send(data)
     } catch (error) {
-        console.error('Error in Requesting String Prices');
+        console.error('Error in Requesting Strike Prices');
         res.status(500).json({ "`error`": 'Error fetching last traded price' });
     }
 });

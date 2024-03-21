@@ -2,10 +2,10 @@
 import React, { useEffect, useState } from 'react';
 import '.././globals.css';
 import Loading from '../components/Loading';
-import io from 'socket.io-client';
+// import io from 'socket.io-client';
 import axios from 'axios';
 
-const Tableone = () => {
+const Tableone = ({ webSocketSymbolsData }) => {
     // All the variable that we are using for storing the data in response
     const [loading, setLoading] = useState(true);
     const [spotLTP, setSpotLTP] = useState([]);
@@ -28,10 +28,9 @@ const Tableone = () => {
     const [selectedExpiryDate, setselectedExpiryDate] = useState('')
     const [selectedStrikePrice, setSelectedStrikePrice] = useState('');
     const [symbol, setSymbol] = useState('');
-    const [index, setIndex] = useState('nifty');
+    const [index, setIndex] = useState('');
     // Mai Function Which Fetch Data from Server
     const fetchSpotLTP = async () => {
-        let socket;
         const currentDate = new Date();
         const currentMonth = currentDate.toLocaleString('default', { month: 'short' }).toUpperCase();
         const currentYear = currentDate.getFullYear().toString().slice(-2);
@@ -67,8 +66,62 @@ const Tableone = () => {
             'infy': `NSE:INFY${currentYear}${currentMonth}FUT`,
             'tcs': `NSE:TCS${currentYear}${currentMonth}FUT`
         }
+
+        let OptionsResponse, CeStrikeSymbol, PeStrikeSymbol;
         const futureSymbol = FutureSymbolMap[index || symbol]
-        let OptionsResponse, CeStrikeSymbol, PeStrikeSymbol
+        const SpotSymbol = indexMapping[index || symbol]
+
+        webSocketSymbolsData.forEach(data => {
+            const symbol = data?.symbol;
+            const ltp = data?.ltp;
+            const exch_feed_time = data?.exch_feed_time;
+            const indian_time = data?.indian_time;
+            if (symbol === SpotSymbol) {
+                setSpotLTPCompleteData(prevData => {
+                    const newData = [
+                        ...prevData,
+                        { symbol, ltp, exch_feed_time, indian_time }
+                    ];
+                    const filteredData = filterMinuteData(newData, timeUpdateDuration);
+                    setSpotLTP(filteredData);
+                    return newData;
+                });
+            }
+            else if (symbol === futureSymbol) {
+                setFuturesDataCompleteData(prevData => {
+                    const newData = [
+                        ...prevData,
+                        { symbol, ltp, exch_feed_time, indian_time }
+                    ];
+                    const filteredData = filterMinuteData(newData, timeUpdateDuration);
+                    setFuturesData(filteredData);
+                    return newData;
+                });
+            } else if (selectedStrikePrice !== '') {
+                if (symbol === CeStrikeSymbol) {
+                    setRecordStockDataCECompleteData(prevData => {
+                        const newData = [
+                            ...prevData,
+                            { symbol, ltp, exch_feed_time, indian_time }
+                        ];
+                        const filteredData = filterMinuteData(newData, timeUpdateDuration);
+                        setRecordStockDataCE(filteredData);
+                        return newData;
+                    });
+                } else if (symbol === PeStrikeSymbol) {
+                    setRecordStockDataPECompleteData(prevData => {
+                        const newData = [
+                            ...prevData,
+                            { symbol, ltp, exch_feed_time, indian_time }
+                        ];
+                        const filteredData = filterMinuteData(newData, timeUpdateDuration);
+                        setRecordStockDataPE(filteredData);
+                        return newData;
+                    });
+                }
+            }
+        });
+
         if (selectedStrikePrice !== '') {
             setRecordStockDataCECompleteData([])
             setRecordStockDataPECompleteData([])
@@ -78,77 +131,8 @@ const Tableone = () => {
             CeStrikeSymbol = OptionsResponse.data.d[0].n
             PeStrikeSymbol = OptionsResponse.data.d[1].n
         }
-        try {
-            const socket = io(`${process.env.NEXT_PUBLIC_WS_URL}`, {
-                path: '/socket.io',
-            });
-
-            socket.on('connect', async () => {
-                console.log("Connection To WebSocket Server Successfull");
-                if (selectedStrikePrice !== '') {
-                    socket.emit('OptionSymbolData', [CeStrikeSymbol, PeStrikeSymbol]);
-                }
-            });
-            socket.on('symbolData', (data) => {
-                if (data.code !== 200) {
-                    const indianTime = convertEpochToIndiaTime(data.exch_feed_time);
-                    if (data.symbol === futureSymbol) {
-                        setFuturesDataCompleteData((prevData) => {
-                            const newData = [
-                                ...prevData,
-                                { symbol: data.symbol, ltp: data.ltp, exch_feed_time: data.exch_feed_time, indian_time: indianTime }
-                            ];
-                            const filteredData = filterMinuteData(newData, timeUpdateDuration)
-                            setFuturesData(filteredData)
-                            return newData;
-                        });
-                    }
-                    else if (data.symbol === indexMapping[index || symbol]) {
-                        setSpotLTPCompleteData((prevData) => {
-                            const newData = [
-                                ...prevData,
-                                { symbol: data.symbol, ltp: data.ltp, exch_feed_time: data.exch_feed_time, indian_time: indianTime }
-                            ];
-                            const filteredData = filterMinuteData(newData, timeUpdateDuration);
-                            setSpotLTP(filteredData);
-                            return newData;
-                        });
-                    } else if (data.symbol === CeStrikeSymbol) {
-                        setRecordStockDataCECompleteData((prevData) => {
-                            const newData = [
-                                ...prevData,
-                                { symbol: data.symbol, ltp: data.ltp, exch_feed_time: data.exch_feed_time, indian_time: indianTime }
-                            ];
-                            const filteredData = filterMinuteData(newData, timeUpdateDuration);
-                            setRecordStockDataCE(filteredData)
-                            return newData;
-                        });
-                    } else if (data.symbol === PeStrikeSymbol) {
-                        setRecordStockDataPECompleteData((prevData) => {
-                            const newData = [
-                                ...prevData,
-                                { symbol: data.symbol, ltp: data.ltp, exch_feed_time: data.exch_feed_time, indian_time: indianTime }
-                            ];
-                            const filteredData = filterMinuteData(newData, timeUpdateDuration);
-                            setRecordStockDataPE(filteredData)
-                            return newData;
-                        });
-                    }
-                }
-            });
-            return () => {
-                if (socket && socket.connected) {
-                    socket.emit('disconnect');
-                    socket.close();
-                }
-            };
-        } catch (error) {
-            console.error(`Error fetching spot LTP: ${error.message}`);
-            if (socket && socket.connected) {
-                socket.close();
-            }
-        }
     };
+
     const fetchRealTimeData = async () => {
         try {
             setLoading(true);
@@ -199,7 +183,6 @@ const Tableone = () => {
         } catch (error) {
             console.error('Error fetching strike prices:', error);
             setLoading(false);
-            throw new Error('Error fetching strike prices');
         }
     };
     const handleIndexChange = (event) => {
@@ -292,7 +275,7 @@ const Tableone = () => {
     };
     const handleStrikeChange = async (event) => {
         const eventValue = event.target.value;
-        setSelectedStrikePrice([eventValue]);
+        // setSelectedStrikePrice([eventValue]);
         if (eventValue === '') {
             setSelectedStrikePrice('')
             clearAllStates();
@@ -349,7 +332,6 @@ const Tableone = () => {
 
         const istFormatter = new Intl.DateTimeFormat('en-IN', options);
         const istDateString = istFormatter.format(date);
-
         return istDateString;
     };
     const DivergenceData = () => {
@@ -467,69 +449,69 @@ const Tableone = () => {
 
         setPeDivergencedata(divergence);
     };
-    function filterMinuteData(dataArray, filterInterval) {
-        const intervals = {
-            '1s': 1,
-            '3s': 3,
-            '10s': 10,
-            '30s': 30,
-            '1m': 60,
-            '2m': 120,
-            '3m': 180
-        };
+    // function filterMinuteData(dataArray, filterInterval) {
+    //     const intervals = {
+    //         '1s': 1,
+    //         '3s': 3,
+    //         '10s': 10,
+    //         '30s': 30,
+    //         '1m': 60,
+    //         '2m': 120,
+    //         '3m': 180
+    //     };
 
-        if (!intervals.hasOwnProperty(filterInterval)) {
-            return [];
-        }
+    //     if (!intervals.hasOwnProperty(filterInterval)) {
+    //         return [];
+    //     }
 
-        const intervalSeconds = intervals[filterInterval];
-        let filteredData = [];
+    //     const intervalSeconds = intervals[filterInterval];
+    //     let filteredData = [];
 
-        // Create a map to store the latest data for each currentTime
-        const latestDataMap = new Map();
+    //     // Create a map to store the latest data for each currentTime
+    //     const latestDataMap = new Map();
 
-        // Boolean flag to track if the first value has been processed
-        let isFirstValueProcessed = false;
+    //     // Boolean flag to track if the first value has been processed
+    //     let isFirstValueProcessed = false;
 
-        // Iterate through dataArray to find the latest data for each currentTime
-        for (let i = 0; i < dataArray.length; i++) {
-            const currentTime = dataArray[i].indian_time.split(":");
-            const currentHours = parseInt(currentTime[0]);
-            const currentMinutes = parseInt(currentTime[1]);
-            const currentSeconds = parseInt(currentTime[2].split(" ")[0]);
+    //     // Iterate through dataArray to find the latest data for each currentTime
+    //     for (let i = 0; i < dataArray.length; i++) {
+    //         const currentTime = dataArray[i].indian_time.split(":");
+    //         const currentHours = parseInt(currentTime[0]);
+    //         const currentMinutes = parseInt(currentTime[1]);
+    //         const currentSeconds = parseInt(currentTime[2].split(" ")[0]);
 
-            // Calculate total seconds to simplify comparisons
-            const totalSeconds = currentHours * 3600 + currentMinutes * 60 + currentSeconds;
+    //         // Calculate total seconds to simplify comparisons
+    //         const totalSeconds = currentHours * 3600 + currentMinutes * 60 + currentSeconds;
 
-            // Check if the currentTime falls within the specified interval and skip the first value
-            if (isFirstValueProcessed && totalSeconds % intervalSeconds === 0) {
-                // Check if the latest data for this currentTime already exists in the map
-                if (!latestDataMap.has(totalSeconds)) {
-                    // If not, add the current data to the map
-                    latestDataMap.set(totalSeconds, dataArray[i]);
-                } else {
-                    // If yes, update the existing data if it's newer
-                    const existingData = latestDataMap.get(totalSeconds);
-                    if (dataArray[i].indian_time > existingData.indian_time) {
-                        latestDataMap.set(totalSeconds, dataArray[i]);
-                    }
-                }
-            } else {
-                // Skip the first value
-                isFirstValueProcessed = true;
-            }
-        }
+    //         // Check if the currentTime falls within the specified interval and skip the first value
+    //         if (isFirstValueProcessed && totalSeconds % intervalSeconds === 0) {
+    //             // Check if the latest data for this currentTime already exists in the map
+    //             if (!latestDataMap.has(totalSeconds)) {
+    //                 // If not, add the current data to the map
+    //                 latestDataMap.set(totalSeconds, dataArray[i]);
+    //             } else {
+    //                 // If yes, update the existing data if it's newer
+    //                 const existingData = latestDataMap.get(totalSeconds);
+    //                 if (dataArray[i].indian_time > existingData.indian_time) {
+    //                     latestDataMap.set(totalSeconds, dataArray[i]);
+    //                 }
+    //             }
+    //         } else {
+    //             // Skip the first value
+    //             isFirstValueProcessed = true;
+    //         }
+    //     }
 
-        // Extract the latest data from the map and add it to the filteredData array
-        latestDataMap.forEach((latestData) => {
-            filteredData.push(latestData);
-        });
+    //     // Extract the latest data from the map and add it to the filteredData array
+    //     latestDataMap.forEach((latestData) => {
+    //         filteredData.push(latestData);
+    //     });
 
-        return filteredData;
-    }
-    // function filterMinuteData(dataArray, filterInterval){
-    //     return dataArray
+    //     return filteredData;
     // }
+    function filterMinuteData(dataArray, filterInterval) {
+        return dataArray
+    }
     useEffect(() => {
         const fetchDataAndUpdateMainData = async () => {
             if (selectedStrikePrice !== '') {
@@ -551,13 +533,18 @@ const Tableone = () => {
         };
 
         fetchDataAndUpdateMainData();
+        // const timer = setTimeout(() => {
+        //     console.log("re-render");
+        //     fetchDataAndUpdateMainData()
+        // }, 3000);
+        // return () => clearTimeout(timer);
     }, [index, symbol, selectedStrikePrice, timeUpdateDuration]);
     useEffect(() => {
         DivergenceData()
         FutureDivergenceCalc()
         CeDivergenceFunction();
         PedivergenceFunction();
-    }, [spotLTP, futuresData, recordStockDataCE, recordStockDataPE]);
+    }, [spotLTP, futuresData, recordStockDataCE, recordStockDataPE])
     return (
         <>
             <section>

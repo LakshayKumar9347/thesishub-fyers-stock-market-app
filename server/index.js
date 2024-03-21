@@ -188,7 +188,7 @@ createFyersSocket().then((fyersdata) => {
     app.use('/records', require('./routes/records'));
     app.get('/', (req, res) => {
         res.send("Welcome to Stock Monitoring Server");
-        console.log("Welcome Mr. Rishi Rai")
+        console.log("Welcome Sir!")
     });
     io.on('connection', (socket) => {
         const currentDate = new Date();
@@ -231,7 +231,7 @@ createFyersSocket().then((fyersdata) => {
         socket.on('OptionSymbolData', (symbol) => {
             const originalSymbol = symbol;
             if (originalSymbol) {
-                // console.log(originalSymbol);
+                console.log(originalSymbol);
                 subscribedSymbols.push(...originalSymbol)
                 // console.log(subscribedSymbols);
                 onconnect()
@@ -247,6 +247,8 @@ createFyersSocket().then((fyersdata) => {
 
         fyersdata.connect();
     });
+
+
 }).catch((err) => {
     console.log("Not Able To Create fyers Socket :)");
     app.get('/', (req, res) => {
