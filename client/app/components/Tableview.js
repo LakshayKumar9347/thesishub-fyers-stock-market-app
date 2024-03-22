@@ -1,11 +1,11 @@
 "use client"
 import React, { useEffect, useState } from 'react';
 import '.././globals.css';
-import Loading from '../components/Loading';
-// import io from 'socket.io-client';
+import Loading from './Loading';
+import io from 'socket.io-client';
 import axios from 'axios';
 
-const Tablethree = ({ webSocketSymbolsData }) => {
+const Tableview = ({ uniqueSymbol }) => {
     // All the variable that we are using for storing the data in response
     const [loading, setLoading] = useState(true);
     const [spotLTP, setSpotLTP] = useState([]);
@@ -28,12 +28,10 @@ const Tablethree = ({ webSocketSymbolsData }) => {
     const [selectedExpiryDate, setselectedExpiryDate] = useState('')
     const [selectedStrikePrice, setSelectedStrikePrice] = useState('');
     const [symbol, setSymbol] = useState('');
-    const [index, setIndex] = useState('');
+    const [index, setIndex] = useState(`${uniqueSymbol}`);
+
     // Mai Function Which Fetch Data from Server
     const fetchSpotLTP = async () => {
-        const currentDate = new Date();
-        const currentMonth = currentDate.toLocaleString('default', { month: 'short' }).toUpperCase();
-        const currentYear = currentDate.getFullYear().toString().slice(-2);
         const indexMapping = {
             'nifty': 'NSE:NIFTY50-INDEX',
             'banknifty': 'NSE:NIFTYBANK-INDEX',
@@ -50,6 +48,9 @@ const Tablethree = ({ webSocketSymbolsData }) => {
             'infy': 'NSE:INFY-EQ',
             'tcs': 'NSE:TCS-EQ',
         };
+        const currentDate = new Date();
+        const currentMonth = currentDate.toLocaleString('default', { month: 'short' }).toUpperCase();
+        const currentYear = currentDate.getFullYear().toString().slice(-2);
         const FutureSymbolMap = {
             'nifty': `NSE:NIFTY${currentYear}${currentMonth}FUT`,
             'banknifty': `NSE:BANKNIFTY${currentYear}${currentMonth}FUT`,
@@ -70,58 +71,6 @@ const Tablethree = ({ webSocketSymbolsData }) => {
         let OptionsResponse, CeStrikeSymbol, PeStrikeSymbol;
         const futureSymbol = FutureSymbolMap[index || symbol]
         const SpotSymbol = indexMapping[index || symbol]
-
-        webSocketSymbolsData.forEach(data => {
-            const symbol = data?.symbol;
-            const ltp = data?.ltp;
-            const exch_feed_time = data?.exch_feed_time;
-            const indian_time = data?.indian_time;
-            if (symbol === SpotSymbol) {
-                setSpotLTPCompleteData(prevData => {
-                    const newData = [
-                        ...prevData,
-                        { symbol, ltp, exch_feed_time, indian_time }
-                    ];
-                    const filteredData = filterMinuteData(newData, timeUpdateDuration);
-                    setSpotLTP(filteredData);
-                    return newData;
-                });
-            }
-            else if (symbol === futureSymbol) {
-                setFuturesDataCompleteData(prevData => {
-                    const newData = [
-                        ...prevData,
-                        { symbol, ltp, exch_feed_time, indian_time }
-                    ];
-                    const filteredData = filterMinuteData(newData, timeUpdateDuration);
-                    setFuturesData(filteredData);
-                    return newData;
-                });
-            } else if (selectedStrikePrice !== '') {
-                if (symbol === CeStrikeSymbol) {
-                    setRecordStockDataCECompleteData(prevData => {
-                        const newData = [
-                            ...prevData,
-                            { symbol, ltp, exch_feed_time, indian_time }
-                        ];
-                        const filteredData = filterMinuteData(newData, timeUpdateDuration);
-                        setRecordStockDataCE(filteredData);
-                        return newData;
-                    });
-                } else if (symbol === PeStrikeSymbol) {
-                    setRecordStockDataPECompleteData(prevData => {
-                        const newData = [
-                            ...prevData,
-                            { symbol, ltp, exch_feed_time, indian_time }
-                        ];
-                        const filteredData = filterMinuteData(newData, timeUpdateDuration);
-                        setRecordStockDataPE(filteredData);
-                        return newData;
-                    });
-                }
-            }
-        });
-
         if (selectedStrikePrice !== '') {
             setRecordStockDataCECompleteData([])
             setRecordStockDataPECompleteData([])
@@ -131,8 +80,70 @@ const Tablethree = ({ webSocketSymbolsData }) => {
             CeStrikeSymbol = OptionsResponse.data.d[0].n
             PeStrikeSymbol = OptionsResponse.data.d[1].n
         }
+        try {
+            const socket = io(`${process.env.NEXT_PUBLIC_WS_URL}`, {
+                path: '/socket.io',
+            });
+            socket.on('connect', async () => {
+                if (selectedStrikePrice !== '') {
+                    socket.emit('OptionSymbolData', [CeStrikeSymbol, PeStrikeSymbol]);
+                }
+            });
+            socket.on('symbolData', (data) => {
+                console.log(data);
+                if (data.code !== 200) {
+                    const indianTime = convertEpochToIndiaTime(data.exch_feed_time);
+                    if (data.symbol === futureSymbol) {
+                        setFuturesDataCompleteData((prevData) => {
+                            const newData = [
+                                ...prevData,
+                                { symbol: data.symbol, ltp: data.ltp, exch_feed_time: data.exch_feed_time, indian_time: indianTime }
+                            ];
+                            const filteredData = filterMinuteData(newData, timeUpdateDuration)
+                            setFuturesData(filteredData)
+                            return newData;
+                        });
+                    }
+                    else if (data.symbol === SpotSymbol) {
+                        setSpotLTPCompleteData((prevData) => {
+                            const newData = [
+                                ...prevData,
+                                { symbol: data.symbol, ltp: data.ltp, exch_feed_time: data.exch_feed_time, indian_time: indianTime }
+                            ];
+                            const filteredData = filterMinuteData(newData, timeUpdateDuration);
+                            setSpotLTP(filteredData);
+                            return newData;
+                        });
+                    } else if (data.symbol === CeStrikeSymbol) {
+                        setRecordStockDataCECompleteData((prevData) => {
+                            const newData = [
+                                ...prevData,
+                                { symbol: data.symbol, ltp: data.ltp, exch_feed_time: data.exch_feed_time, indian_time: indianTime }
+                            ];
+                            const filteredData = filterMinuteData(newData, timeUpdateDuration);
+                            setRecordStockDataCE(filteredData)
+                            return newData;
+                        });
+                    } else if (data.symbol === PeStrikeSymbol) {
+                        setRecordStockDataPECompleteData((prevData) => {
+                            const newData = [
+                                ...prevData,
+                                { symbol: data.symbol, ltp: data.ltp, exch_feed_time: data.exch_feed_time, indian_time: indianTime }
+                            ];
+                            const filteredData = filterMinuteData(newData, timeUpdateDuration);
+                            setRecordStockDataPE(filteredData)
+                            return newData;
+                        });
+                    }
+                }
+            });
+        } catch (error) {
+            console.error(`Error fetching spot LTP: ${error.message}`);
+            // if (socket && socket.connected) {
+            //     socket.close();
+            // }
+        }
     };
-
     const fetchRealTimeData = async () => {
         try {
             setLoading(true);
@@ -275,7 +286,7 @@ const Tablethree = ({ webSocketSymbolsData }) => {
     };
     const handleStrikeChange = async (event) => {
         const eventValue = event.target.value;
-        // setSelectedStrikePrice([eventValue]);
+        setSelectedStrikePrice([eventValue]);
         if (eventValue === '') {
             setSelectedStrikePrice('')
             clearAllStates();
@@ -306,6 +317,11 @@ const Tablethree = ({ webSocketSymbolsData }) => {
         setSelectedStrikePrice('');
     };
     function convertEpochToIndiaTime(epochTimestamp) {
+        // Check if epochTimestamp is a number and within a valid range
+        if (typeof epochTimestamp !== 'number' || epochTimestamp < -8.64e15 || epochTimestamp > 8.64e15) {
+            return "---";
+        }
+
         const epochMillis = epochTimestamp * 1000;
         const date = new Date(epochMillis);
 
@@ -509,9 +525,84 @@ const Tablethree = ({ webSocketSymbolsData }) => {
 
     //     return filteredData;
     // }
+    // function filterMinuteData(dataArray, filterInterval) {
+    //     return dataArray
+    // }
     function filterMinuteData(dataArray, filterInterval) {
-        return dataArray
+        const intervals = {
+            '1s': 1,
+            '3s': 3,
+            '10s': 10,
+            '30s': 30,
+            '1m': 60,
+            '2m': 120,
+            '3m': 180
+        };
+
+        if (!intervals.hasOwnProperty(filterInterval)) {
+            return [];
+        }
+
+        const intervalSeconds = intervals[filterInterval];
+        let filteredData = [];
+
+        // Create a map to store the latest data for each currentTime
+        const latestDataMap = new Map();
+
+        // Boolean flag to track if the first value has been processed
+        let isFirstValueProcessed = false;
+
+        // Iterate through dataArray to find the latest data for each currentTime
+        dataArray.forEach((data) => {
+            // Safeguard against malformed or unexpected data
+            if (!data.indian_time || typeof data.indian_time !== 'string') {
+                return;
+            }
+
+            const currentTimeParts = data.indian_time.split(":");
+            if (currentTimeParts.length < 3 || !currentTimeParts[2].includes(" ")) {
+                // Data format not as expected, can log or handle error here
+                return;
+            }
+
+            const currentHours = parseInt(currentTimeParts[0], 10);
+            const currentMinutes = parseInt(currentTimeParts[1], 10);
+            const currentSeconds = parseInt(currentTimeParts[2].split(" ")[0], 10);
+
+            // Calculate total seconds to simplify comparisons
+            const totalSeconds = currentHours * 3600 + currentMinutes * 60 + currentSeconds;
+
+            // Skip the first value logic removed for simplicity, can be re-added as needed
+
+            // Check if the currentTime falls within the specified interval
+            if (totalSeconds % intervalSeconds === 0) {
+                // Check if the latest data for this currentTime already exists in the map
+                if (!latestDataMap.has(totalSeconds)) {
+                    // If not, add the current data to the map
+                    latestDataMap.set(totalSeconds, data);
+                } else {
+                    // If yes, update the existing data if it's newer
+                    const existingData = latestDataMap.get(totalSeconds);
+                    if (data.indian_time > existingData.indian_time) {
+                        latestDataMap.set(totalSeconds, data);
+                    }
+                }
+            }
+        });
+
+        // Extract the latest data from the map and add it to the filteredData array
+        latestDataMap.forEach((latestData) => {
+            filteredData.push(latestData);
+        });
+
+        return filteredData;
     }
+
+    // useEffect(() => {
+    //     console.log("useeffect Called");
+    //     fetchSpotLTP();
+    // }, [wsData]);
+
     useEffect(() => {
         const fetchDataAndUpdateMainData = async () => {
             if (selectedStrikePrice !== '') {
@@ -533,18 +624,15 @@ const Tablethree = ({ webSocketSymbolsData }) => {
         };
 
         fetchDataAndUpdateMainData();
-        // const timer = setTimeout(() => {
-        //     console.log("re-render");
-        //     fetchDataAndUpdateMainData()
-        // }, 3000);
-        // return () => clearTimeout(timer);
     }, [index, symbol, selectedStrikePrice, timeUpdateDuration]);
+
     useEffect(() => {
         DivergenceData()
         FutureDivergenceCalc()
         CeDivergenceFunction();
         PedivergenceFunction();
     }, [spotLTP, futuresData, recordStockDataCE, recordStockDataPE])
+
     return (
         <>
             <section>
@@ -752,4 +840,4 @@ const Tablethree = ({ webSocketSymbolsData }) => {
         </>
     );
 };
-export default Tablethree;
+export default Tableview;

@@ -75,7 +75,7 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="fixed bottom-0 w-full bg-gray-100 py-16">
+      <section className="bg-gray-100 py-16">
         <div className="container mx-auto text-center">
           <h2 className="text-3xl font-bold mb-4">Need Assistance?</h2>
           <p className="text-lg mb-6">Experience seamless support; contact us for personalized insights and a better website journey.</p>

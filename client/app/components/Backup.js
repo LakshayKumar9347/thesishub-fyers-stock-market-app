@@ -1,11 +1,11 @@
 "use client"
 import React, { useEffect, useState } from 'react';
 import '.././globals.css';
-import Loading from '../components/Loading';
+import Loading from './Loading';
 // import io from 'socket.io-client';
 import axios from 'axios';
 
-const Tabletwo = ({ webSocketSymbolsData }) => {
+const Tableview = ({ wsData }) => {
     // All the variable that we are using for storing the data in response
     const [loading, setLoading] = useState(true);
     const [spotLTP, setSpotLTP] = useState([]);
@@ -30,6 +30,7 @@ const Tabletwo = ({ webSocketSymbolsData }) => {
     const [symbol, setSymbol] = useState('');
     const [index, setIndex] = useState('');
     // Mai Function Which Fetch Data from Server
+
     const fetchSpotLTP = async () => {
         const currentDate = new Date();
         const currentMonth = currentDate.toLocaleString('default', { month: 'short' }).toUpperCase();
@@ -71,7 +72,7 @@ const Tabletwo = ({ webSocketSymbolsData }) => {
         const futureSymbol = FutureSymbolMap[index || symbol]
         const SpotSymbol = indexMapping[index || symbol]
 
-        webSocketSymbolsData.forEach(data => {
+        wsData.forEach(data => {
             const symbol = data?.symbol;
             const ltp = data?.ltp;
             const exch_feed_time = data?.exch_feed_time;
@@ -132,7 +133,6 @@ const Tabletwo = ({ webSocketSymbolsData }) => {
             PeStrikeSymbol = OptionsResponse.data.d[1].n
         }
     };
-
     const fetchRealTimeData = async () => {
         try {
             setLoading(true);
@@ -306,6 +306,11 @@ const Tabletwo = ({ webSocketSymbolsData }) => {
         setSelectedStrikePrice('');
     };
     function convertEpochToIndiaTime(epochTimestamp) {
+        // Check if epochTimestamp is a number and within a valid range
+        if (typeof epochTimestamp !== 'number' || epochTimestamp < -8.64e15 || epochTimestamp > 8.64e15) {
+            return "---";
+        }
+
         const epochMillis = epochTimestamp * 1000;
         const date = new Date(epochMillis);
 
@@ -509,9 +514,84 @@ const Tabletwo = ({ webSocketSymbolsData }) => {
 
     //     return filteredData;
     // }
+    // function filterMinuteData(dataArray, filterInterval) {
+    //     return dataArray
+    // }
     function filterMinuteData(dataArray, filterInterval) {
-        return dataArray
+        const intervals = {
+            '1s': 1,
+            '3s': 3,
+            '10s': 10,
+            '30s': 30,
+            '1m': 60,
+            '2m': 120,
+            '3m': 180
+        };
+
+        if (!intervals.hasOwnProperty(filterInterval)) {
+            return [];
+        }
+
+        const intervalSeconds = intervals[filterInterval];
+        let filteredData = [];
+
+        // Create a map to store the latest data for each currentTime
+        const latestDataMap = new Map();
+
+        // Boolean flag to track if the first value has been processed
+        let isFirstValueProcessed = false;
+
+        // Iterate through dataArray to find the latest data for each currentTime
+        dataArray.forEach((data) => {
+            // Safeguard against malformed or unexpected data
+            if (!data.indian_time || typeof data.indian_time !== 'string') {
+                return;
+            }
+
+            const currentTimeParts = data.indian_time.split(":");
+            if (currentTimeParts.length < 3 || !currentTimeParts[2].includes(" ")) {
+                // Data format not as expected, can log or handle error here
+                return;
+            }
+
+            const currentHours = parseInt(currentTimeParts[0], 10);
+            const currentMinutes = parseInt(currentTimeParts[1], 10);
+            const currentSeconds = parseInt(currentTimeParts[2].split(" ")[0], 10);
+
+            // Calculate total seconds to simplify comparisons
+            const totalSeconds = currentHours * 3600 + currentMinutes * 60 + currentSeconds;
+
+            // Skip the first value logic removed for simplicity, can be re-added as needed
+
+            // Check if the currentTime falls within the specified interval
+            if (totalSeconds % intervalSeconds === 0) {
+                // Check if the latest data for this currentTime already exists in the map
+                if (!latestDataMap.has(totalSeconds)) {
+                    // If not, add the current data to the map
+                    latestDataMap.set(totalSeconds, data);
+                } else {
+                    // If yes, update the existing data if it's newer
+                    const existingData = latestDataMap.get(totalSeconds);
+                    if (data.indian_time > existingData.indian_time) {
+                        latestDataMap.set(totalSeconds, data);
+                    }
+                }
+            }
+        });
+
+        // Extract the latest data from the map and add it to the filteredData array
+        latestDataMap.forEach((latestData) => {
+            filteredData.push(latestData);
+        });
+
+        return filteredData;
     }
+
+    // useEffect(() => {
+    //     console.log("useeffect Called");
+    //     fetchSpotLTP();
+    // }, [wsData]);
+
     useEffect(() => {
         const fetchDataAndUpdateMainData = async () => {
             if (selectedStrikePrice !== '') {
@@ -533,18 +613,15 @@ const Tabletwo = ({ webSocketSymbolsData }) => {
         };
 
         fetchDataAndUpdateMainData();
-        // const timer = setTimeout(() => {
-        //     console.log("re-render");
-        //     fetchDataAndUpdateMainData()
-        // }, 3000);
-        // return () => clearTimeout(timer);
     }, [index, symbol, selectedStrikePrice, timeUpdateDuration]);
+
     useEffect(() => {
         DivergenceData()
         FutureDivergenceCalc()
         CeDivergenceFunction();
         PedivergenceFunction();
     }, [spotLTP, futuresData, recordStockDataCE, recordStockDataPE])
+
     return (
         <>
             <section>
@@ -752,4 +829,4 @@ const Tabletwo = ({ webSocketSymbolsData }) => {
         </>
     );
 };
-export default Tabletwo;
+export default Tableview;

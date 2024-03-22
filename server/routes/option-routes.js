@@ -30,7 +30,7 @@ router.get('/all/:symbol/:date?', async (req, res) => {
         const data = await fyers.getQuotes(strikePrices)
         res.send(data)
     } catch (error) {
-        console.error('Error in Requesting Strike Prices');
+        console.error('Error in Requesting String Prices');
         res.status(500).json({ "`error`": 'Error fetching last traded price' });
     }
 });
@@ -174,10 +174,10 @@ function calculateRoundedLTP(ltp, symbol) {
             gap = 25;
         } else if (symbol === 'reliance' || symbol === "tcs") {
             gap = 20;
-        } else if (symbol === 'hdfcbank' || symbol === "infy" || symbol === 'axisbank' || symbol === 'icicibank') {
+        } else if (symbol === 'hdfcbank' || symbol === "infy") {
             gap = 10;
 
-        } else if (symbol === 'sbin' ) {
+        } else if (symbol === 'sbin' || symbol === 'axisbank' || symbol === 'icicibank') {
             gap = 5;
         }
     } else {

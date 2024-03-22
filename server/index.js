@@ -114,6 +114,7 @@ async function createFyersSocket() {
     } catch (error) {
         // Handle the error here
         console.error('Error creating FyersSocket instance:', error.response.data.message);
+        throw error;
     }
 }
 // Under Developing Logic when Auth Token Expires
@@ -141,7 +142,7 @@ app.get('/gency/authenticate', async (req, res) => {
             process.env.REFRESH_TOKEN = RenewedRefresh_token
 
             // Load .env file
-            const envFilePath = path.resolve('./.env');
+            const envFilePath = path.resolve(`${process.env.SECRET_VALUE_PATH}.env`);
             const envContents = fs.readFileSync(envFilePath, 'utf8');
             const updatedEnvContents = envContents
                 .replace(/^ACCESS_TOKEN=.*/m, `ACCESS_TOKEN='${RenewedAccess_token}'`)
@@ -188,7 +189,7 @@ createFyersSocket().then((fyersdata) => {
     app.use('/records', require('./routes/records'));
     app.get('/', (req, res) => {
         res.send("Welcome to Stock Monitoring Server");
-        console.log("Welcome Sir!")
+        console.log("Welcome Mr. Lakshay")
     });
     io.on('connection', (socket) => {
         const currentDate = new Date();
@@ -213,8 +214,6 @@ createFyersSocket().then((fyersdata) => {
             `NSE:TCS${currentYear}${currentMonth}FUT`];
 
         function onmsg(message) {
-            // console.log(message);
-            // console.log("Subscribe Symbols",subscribedSymbols, subscribedSymbols.length);
             socket.emit('symbolData', message);
         }
         function onconnect() {
@@ -222,7 +221,7 @@ createFyersSocket().then((fyersdata) => {
             fyersdata.autoreconnect();
         }
         function onerror(err) {
-            // console.log(err.message);
+            console.log(err.message);
         }
         function onclose() {
             console.log("socket closed");
@@ -231,9 +230,7 @@ createFyersSocket().then((fyersdata) => {
         socket.on('OptionSymbolData', (symbol) => {
             const originalSymbol = symbol;
             if (originalSymbol) {
-                console.log(originalSymbol);
                 subscribedSymbols.push(...originalSymbol)
-                // console.log(subscribedSymbols);
                 onconnect()
             }
         });
@@ -247,8 +244,6 @@ createFyersSocket().then((fyersdata) => {
 
         fyersdata.connect();
     });
-
-
 }).catch((err) => {
     console.log("Not Able To Create fyers Socket :)");
     app.get('/', (req, res) => {
@@ -258,7 +253,7 @@ createFyersSocket().then((fyersdata) => {
         const apiUrl = `${process.env.MAIN_URL}/gency/authenticate`
         const response = await axios.get(apiUrl)
         const data = response.data
-        console.log(data);
+       console.log(data);
     }
     RenewRefreshTokenWithAuthenticate()
 })
